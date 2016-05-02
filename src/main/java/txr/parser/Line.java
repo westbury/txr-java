@@ -5,7 +5,7 @@ import java.util.List;
 
 public class Line {
 
-	List<Node> nodes = new ArrayList<>();
+	public final List<Node> nodes = new ArrayList<>();
 	
 	public boolean isEmpty() {
 		return nodes.isEmpty();

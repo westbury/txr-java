@@ -14,4 +14,11 @@ public class Ident extends Node {
 		this.longMatch = longMatch;
 	}
 
+	public String toString() {
+		if (longMatch) {
+			return "Ident (long match): " + id;
+		} else {
+			return "Ident: " + id;
+		}
+	}
 }

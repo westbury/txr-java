@@ -420,14 +420,20 @@ public class Parser {
 		do {
 			i++;
 			c = query.charAt(i);
-		} while (isValidBidentChar(c));
+		} while (isValidSidentChar(c));
 
-		if (c != '}') {
-			throw new RuntimeException("Invalid character in bident: " + c);
-		}
+//		if (c != ' ' || c != ')') {
+//			throw new RuntimeException("Invalid character in sident: " + c);
+//		}
 		return new Ident(query.substring(start,  i));
 	}
 
+	private boolean isValidSidentChar(char c) {
+		return Character.isAlphabetic(c)
+				|| Character.isDigit(c)
+				|| c == '_';
+	}
+	
 	private boolean isValidBidentChar(char c) {
 		switch (c) {
 		case '!':
