@@ -1,5 +1,6 @@
-package txr.semantics;
+package txr.matchers;
 
+import txr.parser.Expr;
 import txr.parser.Line;
 
 /**
@@ -10,6 +11,6 @@ import txr.parser.Line;
  */
 public abstract class Matcher {
 
-	public abstract void match(DocumentMatch documentMatch);
+	public abstract boolean match(LinesFromInputReader documentMatch);
 
 }

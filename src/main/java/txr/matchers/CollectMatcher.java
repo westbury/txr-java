@@ -1,10 +1,7 @@
-package txr.semantics;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+package txr.matchers;
 
 import txr.parser.Expr;
+import txr.parser.Symbol;
 
 public class CollectMatcher extends VerticalMatcher {
 
@@ -14,9 +11,18 @@ public class CollectMatcher extends VerticalMatcher {
 	Integer maxgap;
 	Integer mingap;
 
-	List<Matcher> body = new ArrayList<>();
+	enum BlockType {
+		BODY,
+		UNTIL,
+		LAST
+	};
+	BlockType where = BlockType.BODY;
 	
-	List<Matcher> until = new ArrayList<>();
+	MatchSequence body = new MatchSequence();
+	
+	MatchSequence until;
+	
+	MatchSequence last;
 	
 	public CollectMatcher(Expr expr) {
 		KeywordValues keywordValues = new KeywordValues(expr);
@@ -50,14 +56,47 @@ public class CollectMatcher extends VerticalMatcher {
 
 	@Override
 	public void addNextMatcherInMatchSequence(Matcher matcher) {
-		// TODO Auto-generated method stub
-		
+		switch (where) {
+		case BODY:
+			body.addNextMatcherInMatchSequence(matcher);
+			break;
+		case UNTIL:
+			until.addNextMatcherInMatchSequence(matcher);
+			break;
+		case LAST:
+			last.addNextMatcherInMatchSequence(matcher);
+			break;
+		}
 	}
 
 	@Override
-	public void match(DocumentMatch documentMatch) {
+	public void addNextDirective(Expr expr) {
+		Symbol symbol = (Symbol)expr.subExpressions.get(0);
+		switch (symbol.symbolText.toLowerCase()) {
+			case "until":
+				if (where != BlockType.BODY) {
+					throw new RuntimeException("Can't have UNTIL directive if already in an UNTIL or LAST block in the same COLLECT.");
+				}
+				where = BlockType.UNTIL;
+				until = new MatchSequence();
+				break;
+				
+			case "last":
+				if (where != BlockType.BODY) {
+					throw new RuntimeException("Can't have LAST directive if already in an UNTIL or LAST block in the same COLLECT.");
+				}
+				where = BlockType.LAST;
+				last = new MatchSequence();
+				break;
+			default:
+				throw new RuntimeException("Unknown directive or unexpected at this location.");
+		}
+	}
+	
+	@Override
+	public boolean match(LinesFromInputReader documentMatch) {
 		// TODO Auto-generated method stub
-		
+		return false;
 	}
 
 	public String toString() {
@@ -69,7 +108,12 @@ public class CollectMatcher extends VerticalMatcher {
 		if (maxgap != null) sb.append(" maxgap=" + maxgap);
 		if (mingap != null) sb.append(" mingap=" + mingap);
 		sb.append(" body=").append(body.toString());
-		sb.append(" until=").append(until.toString());
+		if (until != null) {
+			sb.append(" until=").append(until.toString());
+		}
+		if (last != null) {
+			sb.append(" last=").append(last.toString());
+		}
 		return sb.toString();
 	}
 }

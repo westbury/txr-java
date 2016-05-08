@@ -1,4 +1,4 @@
-package txr.semantics;
+package txr.matchers;
 
 import java.util.HashMap;
 import java.util.Iterator;
