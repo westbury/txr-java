@@ -2,9 +2,9 @@ package txr.parser;
 
 public class IntegerLiteral extends SubExpression {
 
-	public final int value;
+	public final long value;
 	
-	public IntegerLiteral(int value) {
+	public IntegerLiteral(long value) {
 		this.value = value;
 	}
 

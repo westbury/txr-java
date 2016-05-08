@@ -2,7 +2,7 @@ package txr.parser;
 
 public class Ident extends Node {
 
-	private String id;
+	public final String id;
 	
 	private boolean longMatch;
 	

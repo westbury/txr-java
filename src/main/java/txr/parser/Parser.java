@@ -201,7 +201,7 @@ public class Parser {
 				eatRestOfLine();
 				subExpression = null;
 				break;
-				
+
 			default:
 				subExpression = parseLidentOrNumber();
 			}
@@ -222,8 +222,158 @@ public class Parser {
 		throw new UnsupportedOperationException();
 	}
 
+	/**
+	 * We are initially positioned at the first character
+	 * after the opening double quote.  On return we are
+	 * positioned at the first character after the closing
+	 * double quote.
+	 * 
+	 * @return
+	 */
 	private SubExpression parseStringLiteral() {
-		throw new UnsupportedOperationException();
+		StringBuffer result = new StringBuffer();
+
+		int start = i;
+
+		char c = query.charAt(i);
+		do {
+			if (c == '\\') {
+				{
+					int j = i;
+					if (query.charAt(i+1) == '\n') {
+						/*
+						 * This is a little complicated because we want to remove
+						 * trailing spaces, but only back to the last escaped space.
+						 * As escaped spaces are appended separately, the start position
+						 * would be following any escaped space.
+						 */
+						while (j > start && query.charAt(j-1) == ' ') {
+							j--;
+						}
+					}
+					if (j > start) {
+						result.append(query.substring(start, j));
+					}
+				}
+
+				i++;
+				c = query.charAt(i);
+				switch (c) {
+				case '\\':
+				case '"':
+					start = i;
+					break;
+				case 'n':
+					result.append('\n');
+					start = ++i;
+					break;
+				case 't':
+					result.append('\t');
+					start = ++i;
+					break;
+				case ' ':
+					result.append(' ');
+					start = ++i;
+					break;
+				case 'x':
+					i++;
+					char hexChar = parseHexChar();
+					result.append(hexChar);
+					if (query.charAt(i) == ';') {
+						i++;
+					}
+					start = i;
+					break;
+				case '\n':
+					/*
+					 * A backslash as the very last character of a line
+					 * indicates a continuation.  Trailing spaces at the
+					 * end of the current line have already been removed.
+					 * We must eat all characters till the first non-space
+					 * character in the following line.
+					 */
+					do {
+						i++;
+						c = query.charAt(i);
+					} while (c == ' ');
+					start = i;
+					break;
+				default:
+					if (Character.isDigit(c)) {
+						char octalChar = parseOctalChar();
+						result.append(octalChar);
+						if (query.charAt(i) == ';') {
+							i++;
+						}
+						start = i;
+					} else {
+						throw new RuntimeException("Backslash followed by invalid character.");
+					}
+				}
+			} else {
+				i++;
+			}
+
+			c = query.charAt(i);
+		} while (c != '"');
+
+		if (i > start) {
+			result.append(query.substring(start, i));
+		}
+
+		i++;  // Pass the closing double quote
+		
+		return new StringLiteral(result.toString());
+	}
+
+	/**
+	 * On entry the input points to the first octal digit.  On exit
+	 * the input points to the first following character that is
+	 * not an octal digit.
+	 * 
+	 * @return
+	 */
+	private char parseOctalChar() {
+		int start = i;
+		char c = query.charAt(i);
+		while (isOctalDigit(c)) {
+			i++;
+			c = query.charAt(i);
+		}
+		
+		if (i - start == 0) {
+			throw new RuntimeException("Octal digits expected.");
+		}
+
+		String octalAsString = query.substring(start, i);
+		int value = Integer.parseInt(octalAsString, 8);
+		
+		return (char)value;
+	}
+
+	/**
+	 * On entry the input points to the first hex digit.  On exit
+	 * the input points to the first following character that is
+	 * not a hex digit.
+	 * 
+	 * @return
+	 */
+	private char parseHexChar() {
+		int start = i;
+		char c = query.charAt(i);
+		while (isHexadecimalDigit(c)) {
+			i++;
+			c = query.charAt(i);
+		}
+		
+		if (i - start == 0) {
+			throw new RuntimeException("Hexadecimal digits expected.");
+		}
+
+		String hexadecimalAsString = query.substring(start, i);
+		int value = Integer.parseInt(hexadecimalAsString, 16);
+		
+		return (char)value;
 	}
 
 	private SubExpression parseBinaryLiteral() {
@@ -310,7 +460,96 @@ public class Parser {
 	}
 
 	private SubExpression parseCharacterLiteral() {
-		throw new UnsupportedOperationException();
+		int start = i;
+
+		char c = query.charAt(i);
+		switch (Character.toLowerCase(c)) {
+		case 'x':
+			if (isHexadecimalDigit(query.charAt(i+1))) {
+				i++;
+				char hexadecimalChar = parseHexChar();
+				return new CharacterLiteral(hexadecimalChar);
+			}
+			// If no hexadecimal digit, fall through to get 'x' or 'X'
+			break;
+		case 'o':
+			if (isOctalDigit(query.charAt(i+1))) {
+				i++;
+				char octalChar = parseOctalChar();
+				return new CharacterLiteral(octalChar);
+			}
+			// If no octal digit, fall through to get 'o' or 'O'
+			break;
+		case 'a':
+			if (query.substring(start, start+5).equalsIgnoreCase("alarm")) {
+				i += 5;
+				return new CharacterLiteral((char)7); 
+			}
+			break;
+		case 'b':
+			if (query.substring(start, start+9).equalsIgnoreCase("backspace")) {
+				i += 9;
+				return new CharacterLiteral((char)8); 
+			}
+			break;
+		case 'e':
+			if (query.substring(start, start+3).equalsIgnoreCase("esc")) {
+				i += 3;
+				return new CharacterLiteral((char)27); 
+			}
+			break;
+		case 'l':
+			if (query.substring(start, start+8).equalsIgnoreCase("linefeed")) {
+				i += 8;
+				return new CharacterLiteral((char)10); 
+			}
+			break;
+		case 'n':
+			if (query.substring(start, start+7).equalsIgnoreCase("newline")) {
+				i += 7;
+				return new CharacterLiteral((char)10); 
+			} else if (query.substring(start, start+3).equalsIgnoreCase("nul")) {
+				i += 3;
+				return new CharacterLiteral((char)0); 
+			}
+			break;
+		case 'p':
+			if (query.substring(start, start+4).equalsIgnoreCase("pnul")) {
+				i += 4;
+				return new CharacterLiteral('\uDC00'); 
+			} else if (query.substring(start, start+4).equalsIgnoreCase("page")) {
+				i += 4;
+				return new CharacterLiteral((char)12); 
+			}
+			break;
+		case 'r':
+			if (query.substring(start, start+6).equalsIgnoreCase("return")) {
+				i += 6;
+				return new CharacterLiteral((char)13); 
+			}
+			break;
+		case 's':
+			if (query.substring(start, start+5).equalsIgnoreCase("space")) {
+				i += 5;
+				return new CharacterLiteral((char)32); 
+			}
+			break;
+		case 't':
+			if (query.substring(start, start+3).equalsIgnoreCase("tab")) {
+				i += 3;
+				return new CharacterLiteral((char)9); 
+			}
+			break;
+		case 'v':
+			if (query.substring(start, start+4).equalsIgnoreCase("vtab")) {
+				i += 4;
+				return new CharacterLiteral((char)11); 
+			}
+			break;
+		}
+		
+		i += 1;
+		return new CharacterLiteral(c); 
 	}
 
 	private SubExpression parseRegularExpression() {
@@ -346,45 +585,129 @@ public class Parser {
 	 * and ! $ % & * + - < = > ? \ _ ˜ /
 	 * 
 	 * A number
+	 * 
+	 * Note that a '.' is not a valid lident character.
+	 * 
 	 * @return
 	 */
 	private SubExpression parseLidentOrNumber() {
-		//		// First attempt to parse as a number
-		//		// If that fails, see if it is a valid lident
-		//	
-		//		boolean isNegated = false;
-		//		if (query.charAt(i) == '+') {
-		//			i++;
-		//		} else if (query.charAt(i) == '-') {
-		//			negate = true;
-		//			i++;
-		//		}
-		//		
-		//		int 
-		//		c = query.charAt(i);
-		//		while ()
-		//	{
-		//		i += 1;
-		//		int value = parseInteger();
-		//		expr = new IntegerLiteral(value);
-		//	}
-		//		break;
-		//		
-		//	case '-':
-		//	{
-		//		i += 1;
-		//		int value = parseInteger();
-		//		expr = new IntegerLiteral(-value);
-		//	}
-		//		break;
-		//		expr = new IntegerLiteral(-value);
-		//		if (Character.isDigit(c)) {
-		//			int value = parseInteger();
-		//			expr = new IntegerLiteral(value);
-		//		}
+		// First attempt to parse as a number
+		// If that fails, see if it is a valid lident
 
-		// If not an integer or floating point number, it's a symbol
-		return parseLident();
+		int start = i;
+
+		if (query.charAt(i) == '+') {
+			i++;
+		} else if (query.charAt(i) == '-') {
+			i++;
+		}
+
+		int startOfDigits = i;
+
+		char c = query.charAt(i);
+		while (Character.isDigit(c)) {
+			i++;
+			c = query.charAt(i);
+		};
+
+		if (c == '.') {
+			do {
+				i++;
+				c = query.charAt(i);
+			} while (Character.isDigit(c));
+
+			boolean haveDigits = ((i - startOfDigits) >= 2);
+			if (!haveDigits) {
+				throw new RuntimeException("a '.' appears, but no digits before or after it so not a valid floating-point number.");
+			}
+
+			if (c == 'e' || c == 'E') {
+				i++;
+				if (query.charAt(i) == '+') {
+					i++;
+				} else if (query.charAt(i) == '-') {
+					i++;
+				}
+
+				c = query.charAt(i);
+				if (!Character.isDigit(c)) {
+					// There's a '.', so can't be a lident.
+					throw new RuntimeException("Invalid floating-point constant (and can't be a lident because it has a '.'.");
+				}
+
+				do {
+					i++;
+					c = query.charAt(i);
+				} while (Character.isDigit(c));
+			}
+
+			if (isValidLidentChar(c)) {	
+				// There's a '.', so can't be a lident.
+				throw new RuntimeException("Invalid floating-point constant (and can't be a lident because it has a '.'.");
+			}
+
+			// It's a valid floating-point number
+			return new FloatingPointLiteral(query.substring(start, i));
+		} else if (c == 'e' || c == 'E') {
+			i++;
+			if (query.charAt(i) == '+') {
+				i++;
+			} else if (query.charAt(i) == '-') {
+				i++;
+			}
+
+			c = query.charAt(i);
+			if (Character.isDigit(c)) {
+				do {
+					i++;
+					c = query.charAt(i);
+				} while (Character.isDigit(c));
+
+				if (isValidLidentChar(c)) {	
+					// Might still be a lident so process rest as a lident...
+					do {
+						i++;
+						c = query.charAt(i);
+					} while (isValidLidentChar(c));
+					return new Symbol(query.substring(start, i));
+				}
+
+				// It's a valid floating-point number
+				return new FloatingPointLiteral(query.substring(start, i));
+
+			} else {
+				// It looked like a floating-point number, but no digit
+				// followed the 'E'.  There was no '.' so we process this
+				// as a lident.
+				while (isValidLidentChar(c)) {
+					i++;
+					c = query.charAt(i);
+				}
+				return new Symbol(query.substring(start, i));
+			}
+		} else if (isValidLidentChar(c)) {
+			// Possible integer following by lident (not digit),
+			// can't be number so process as lident. 
+			do {
+				i++;
+				c = query.charAt(i);
+			} while (isValidLidentChar(c));
+			return new Symbol(query.substring(start, i));
+		} else {
+			// If there's at least one digit, it's an integer.
+			if (i - startOfDigits >= 1) {
+				String integerAsText = query.substring(start, i);
+				try {
+					long value = Long.parseLong(integerAsText);
+					return new IntegerLiteral(value);
+				} catch (NumberFormatException e) {
+					throw new RuntimeException("'" + integerAsText + "' appears to be a integer literal but it is out-of-range.");
+				}
+			} else {
+				// It's a + or - only
+				return new Symbol(query.substring(start, i));
+			}
+		}
 	}
 
 	private void appendThisLine() {
@@ -422,9 +745,9 @@ public class Parser {
 			c = query.charAt(i);
 		} while (isValidSidentChar(c));
 
-//		if (c != ' ' || c != ')') {
-//			throw new RuntimeException("Invalid character in sident: " + c);
-//		}
+		//		if (c != ' ' || c != ')') {
+		//			throw new RuntimeException("Invalid character in sident: " + c);
+		//		}
 		return new Ident(query.substring(start,  i));
 	}
 
@@ -433,7 +756,7 @@ public class Parser {
 				|| Character.isDigit(c)
 				|| c == '_';
 	}
-	
+
 	private boolean isValidBidentChar(char c) {
 		switch (c) {
 		case '!':
