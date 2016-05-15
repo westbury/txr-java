@@ -34,13 +34,20 @@ public class MatchSequence extends VerticalMatcher {
 	}
 
 	@Override
-	public boolean match(LinesFromInputReader documentMatch) {
+	public boolean match(LinesFromInputReader reader, MatchResults bindings) {
+		MatchResults bindingsToAdd = new MatchResults();
+		
+		int start = reader.getCurrent();
+		
 		for (Matcher matcher : sequence) {
-			boolean matches = matcher.match(documentMatch);
+			boolean matches = matcher.match(reader, bindingsToAdd);
 			if (!matches) {
+				reader.setCurrent(start);
 				return false;
 			}
 		}
+		
+		bindings.addAll(bindingsToAdd);
 		return true;
 	}
 

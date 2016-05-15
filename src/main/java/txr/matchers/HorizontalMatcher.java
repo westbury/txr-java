@@ -8,7 +8,7 @@ public abstract class HorizontalMatcher {
 		return false;
 	};
 
-	public abstract boolean match(CharsFromInputLineReader reader);
+	public abstract boolean match(CharsFromInputLineReader reader, MatchResults bindings);
 
 
 }

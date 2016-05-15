@@ -1,5 +1,8 @@
 package txr.matchers;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import txr.parser.Expr;
 import txr.parser.Symbol;
 
@@ -94,9 +97,32 @@ public class CollectMatcher extends VerticalMatcher {
 	}
 	
 	@Override
-	public boolean match(LinesFromInputReader documentMatch) {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean match(LinesFromInputReader reader, MatchResults bindings) {
+		List<MatchResults> nestedBindingsList = new ArrayList<>();
+		do {
+			MatchResults nestedBindings = new MatchResults();
+
+			int start = reader.getCurrent();
+			if (until != null && until.match(reader, nestedBindings)) {
+				reader.setCurrent(start);
+				break;
+			}
+			
+			if (last != null && last.match(reader, nestedBindings)) {
+				nestedBindingsList.add(nestedBindings);
+				break;
+			}
+
+			// Look for a match
+			if (body.match(reader, nestedBindings)) {
+				nestedBindingsList.add(nestedBindings);
+			} else {
+				reader.fetchLine();
+			}
+		} while (!reader.isEndOfFile());
+		
+		bindings.addList("collect", nestedBindingsList);
+		return true;
 	}
 
 	public String toString() {

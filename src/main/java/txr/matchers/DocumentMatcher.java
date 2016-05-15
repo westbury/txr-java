@@ -71,24 +71,17 @@ public class DocumentMatcher {
 		} while (lineIndex < ast.lineSequence.size());
 	}
 
-	public LinesFromInputReader process(String [] inputText) {
-		LinesFromInputReader results = new LinesFromInputReader(topLevelMatcher, inputText);
+	public MatchResults process(String [] inputText) {
+		LinesFromInputReader reader = new LinesFromInputReader(inputText);
+		MatchResults results = new MatchResults();
+		
+		boolean matched = topLevelMatcher.match(reader, results);
 
-		return results;
+		return matched ? results : null;
 	}
 
 	public String toString() {
 		return topLevelMatcher.toString();
 	}
 
-	private Map<String, Variable> variables = new HashMap<>();
-	
-	public Variable getVariable(Ident node) {
-		Variable var = variables.get(node.id);
-		if (var == null) {
-			var = new Variable(node.id);
-			variables.put(node.id, var);
-		}
-		return null;
-	}
 }

@@ -1,6 +1,5 @@
 package txr.matchers;
 
-import java.util.List;
 
 /**
  * The results of a successful match.
@@ -14,11 +13,8 @@ public class LinesFromInputReader {
 	
 	private int index = 0;
 
-	public LinesFromInputReader(Matcher matcher, String [] inputText) {
+	public LinesFromInputReader(String [] inputText) {
 		this.inputText = inputText;
-
-		matcher.match(this);
-		
 	}
 
 	public String fetchLine() {
@@ -32,6 +28,10 @@ public class LinesFromInputReader {
 	public void setCurrent(int index) {
 		this.index = index;
 		
+	}
+
+	public boolean isEndOfFile() {
+		return index == inputText.length;
 	}
 
 }
