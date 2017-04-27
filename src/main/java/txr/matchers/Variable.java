@@ -15,5 +15,8 @@ public class Variable {
 
 	public String text = null;
 
-	
+	@Override
+	public String toString() {
+		return "@" + id + "=" + text;
+	}
 }

@@ -1,12 +1,9 @@
 package txr.matchers;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Stack;
 
 import txr.parser.AST;
 import txr.parser.Expr;
-import txr.parser.Ident;
 import txr.parser.Line;
 import txr.parser.SubExpression;
 import txr.parser.Symbol;
@@ -38,6 +35,20 @@ public class DocumentMatcher {
 							processor.addNextMatcherInMatchSequence(collectMatcher);
 							processorStack.push(processor);
 							processor = collectMatcher;
+							break;
+
+						case "cases":
+							CasesMatcher casesMatcher = new CasesMatcher(expr);
+							processor.addNextMatcherInMatchSequence(casesMatcher);
+							processorStack.push(processor);
+							processor = casesMatcher;
+							break;
+
+						case "maybe":
+							MaybeMatcher maybeMatcher = new MaybeMatcher(expr);
+							processor.addNextMatcherInMatchSequence(maybeMatcher);
+							processorStack.push(processor);
+							processor = maybeMatcher;
 							break;
 
 						case "end":

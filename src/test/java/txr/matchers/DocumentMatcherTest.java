@@ -103,4 +103,83 @@ public class DocumentMatcherTest {
 		assertEquals("78.00", matched.getVariable("delivery").text);
 	}
 
+	@Test
+	public void CasesTest() {
+		Parser p = new Parser();
+		AST ast = p.parse("Introduction\n"
+				+ "\n"
+				+ "@(cases)\n"
+				+ "Case1: @description\n"
+				+ "@(or)\n"
+				+ "Case2: @description\n"
+				+ "@(and)\n"
+				+ "Case3: @description\n"
+				+ "@(end)\n"
+				+ "Conclusion\n");
+		assertEquals("[[Text: *Introduction*], [], [[Symbol: cases]], [Text: *Case1: *, Ident: description], [[Symbol: or]], [Text: *Case2: *, Ident: description], [[Symbol: and]], [Text: *Case3: *, Ident: description], [[Symbol: end]], [Text: *Conclusion*]]", ast.toString());
+
+		DocumentMatcher m = new DocumentMatcher(ast);
+		assertEquals("[Match on line: [Text: [*Introduction*]], Match on line: [], Cases[[Match on line: [Text: [*Case1: *], {Variable: Ident: description, Following: [EOL]}]][Match on line: [Text: [*Case2: *], {Variable: Ident: description, Following: [EOL]}]], [Match on line: [Text: [*Case3: *], {Variable: Ident: description, Following: [EOL]}]], , Match on line: [Text: [*Conclusion*]]]", m.toString());
+
+		String [] inputText = new String [] {
+				"Introduction",
+				"",
+				"Case2: Bananas",
+				"Conclusion"
+		};
+		MatchResults matched = m.process(inputText);
+		assertNotNull(matched);
+		assertEquals(1, matched.getCollections(0).size());
+		MatchResults bananaMatch = matched.getCollections(0).get(0);
+		assertEquals("Bananas", bananaMatch.getVariable("description").text);
+	}
+
+	@Test
+	public void MaybeWithMultipleMatchesTest() {
+		Parser p = new Parser();
+		AST ast = p.parse("Introduction\n"
+				+ "@(maybe)\n"
+				+ "Case1: @description\n"
+				+ "@(or)\n"
+				+ "@general\n"
+				+ "Case1: @description\n"
+				+ "@(end)\n"
+				+ "Conclusion\n");
+
+		DocumentMatcher m = new DocumentMatcher(ast);
+
+		String [] inputText = new String [] {
+				"Introduction",
+				"Case1: Bananas",
+				"Case1: Oranges",
+				"Conclusion"
+		};
+		MatchResults matched = m.process(inputText);
+		assertNotNull(matched);
+		assertEquals(2, matched.getCollections(0).size());
+		MatchResults bananaMatch = matched.getCollections(0).get(0);
+		assertEquals("Bananas", bananaMatch.getVariable("description").text);
+		MatchResults orangeMatch = matched.getCollections(0).get(1);
+		assertEquals("Oranges", orangeMatch.getVariable("description").text);
+	}
+
+	@Test
+	public void WhitespaceTest() {
+		Parser p = new Parser();
+		AST ast = p.parse("Match this\nvalue = @x\nMatch this @@ nine");
+		assertEquals("[[Text: *Match this*], [Text: *value = *, Ident: x], [Text: *Match this @ nine*]]", ast.toString());
+
+		DocumentMatcher m = new DocumentMatcher(ast);
+		assertEquals("[Match on line: [Text: [*Match this*]], Match on line: [Text: [*value = *], {Variable: Ident: x, Following: [EOL]}], Match on line: [Text: [*Match this @ nine*]]]", m.toString());
+
+		String [] inputText = new String [] {
+				"Match this",
+				"value = 27",
+				"Match this @ nine"
+		};
+		MatchResults matched = m.process(inputText);
+		assertNotNull(matched);
+		assertEquals("27", matched.getVariable("x").text);
+	}
+
 }
