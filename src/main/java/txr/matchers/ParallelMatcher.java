@@ -47,6 +47,7 @@ public abstract class ParallelMatcher extends VerticalMatcher {
 			sb.append(eachMatchSequence.toString()).append(separator);
 			separator = ", ";
 		}
+		sb.append("]");
 		return sb.toString();
 	}
 }

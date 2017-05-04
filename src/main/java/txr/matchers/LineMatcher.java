@@ -76,6 +76,10 @@ public class LineMatcher extends Matcher {
 
 	@Override
 	public boolean match(LinesFromInputReader documentReader, MatchContext context) {
+		if (documentReader.isEndOfFile()) {
+			return false;
+		}
+		
 		int start = documentReader.getCurrent();
 		String line = documentReader.fetchLine();
 		CharsFromInputLineReader reader = new CharsFromInputLineReader(line);

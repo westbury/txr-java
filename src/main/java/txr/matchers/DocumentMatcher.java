@@ -51,6 +51,13 @@ public class DocumentMatcher {
 							processor = maybeMatcher;
 							break;
 
+						case "skip":
+							SkipMatcher skipMatcher = new SkipMatcher(expr);
+							processor.addNextMatcherInMatchSequence(skipMatcher);
+							processorStack.push(processor);
+							processor = skipMatcher;
+							break;
+
 						case "assert":
 							AssertMatcher assertMatcher = new AssertMatcher(expr);
 							processor.addNextMatcherInMatchSequence(assertMatcher);
@@ -62,6 +69,14 @@ public class DocumentMatcher {
 							break;
 
 						case "end":
+							if (processor instanceof SkipMatcher) {
+								/* If in the text following a @(skip) then
+								 * this text is being put into the @(skip) content,
+								 * so we really have to pop twice, first pop the @(skip)
+								 * then pop the containing object which the @(end) is ending.
+								 */
+								processor = processorStack.pop();
+							}
 							processor = processorStack.pop();
 							break;
 
