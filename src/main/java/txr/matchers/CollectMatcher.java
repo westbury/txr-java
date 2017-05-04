@@ -97,31 +97,75 @@ public class CollectMatcher extends VerticalMatcher {
 	}
 	
 	@Override
-	public boolean match(LinesFromInputReader reader, MatchResults bindings) {
-		List<MatchResults> nestedBindingsList = new ArrayList<>();
+	public boolean match(LinesFromInputReader reader, MatchContext context) {
+		List<MatchResultsBase> nestedBindingsList = new ArrayList<>();
 		do {
-			MatchResults nestedBindings = new MatchResults();
-
 			int start = reader.getCurrent();
-			if (until != null && until.match(reader, nestedBindings)) {
-				reader.setCurrent(start);
-				break;
+			if (until != null) {
+				// Note that in this case the pending bindings are dropped,
+				// even when the @(until) clause matches.
+				MatchResultsWithPending nestedBindings = new MatchResultsWithPending(context.bindings);
+				MatchContext nestedContext = new MatchContext(nestedBindings);
+				
+				String temp = reader.toString();
+				if (until.match(reader, nestedContext)) {
+					reader.setCurrent(start);
+					break;
+				} else {
+					/*
+					 * The sub-sequence did not match.  Check only that
+					 * the matching did not get as far as processing any @(assert)
+					 * directives inside the sub-sequence.  If an @(assert)
+					 * directive was processed then the failure to match is an error.
+					 */
+					// TODO this should not be needed because 'match' method should check.
+					// The further 'in' the check, the better the error message.
+					nestedContext.assertContext.checkMatchFailureIsOk(reader.getCurrent(), until);
+				}
+			}
+		
+			if (last != null) {
+				MatchResultsWithPending nestedBindings = new MatchResultsWithPending(context.bindings);
+				MatchContext nestedContext = new MatchContext(nestedBindings);
+				
+				if (last.match(reader, nestedContext)) {
+					nestedBindingsList.add(nestedBindings.extractPendingAsBase());
+					break;
+				} else {
+					/*
+					 * The sub-sequence did not match.  Check only that
+					 * the matching did not get as far as processing any @(assert)
+					 * directives inside the sub-sequence.  If an @(assert)
+					 * directive was processed then the failure to match is an error.
+					 */
+					// TODO this should not be needed because 'match' method should check.
+					// The further 'in' the check, the better the error message.
+					nestedContext.assertContext.checkMatchFailureIsOk(reader.getCurrent(), last);
+				}
 			}
 			
-			if (last != null && last.match(reader, nestedBindings)) {
-				nestedBindingsList.add(nestedBindings);
-				break;
-			}
-
-			// Look for a match
-			if (body.match(reader, nestedBindings)) {
-				nestedBindingsList.add(nestedBindings);
+			// Look for a match on the body
+			MatchResultsWithPending nestedBindings = new MatchResultsWithPending(context.bindings);
+			MatchContext nestedContext = new MatchContext(nestedBindings);
+			
+			if (body.match(reader, nestedContext)) {
+				nestedBindingsList.add(nestedBindings.extractPendingAsBase());
 			} else {
+				/*
+				 * The sub-sequence did not match.  Check only that
+				 * the matching did not get as far as processing any @(assert)
+				 * directives inside the sub-sequence.  If an @(assert)
+				 * directive was processed then the failure to match is an error.
+				 */
+				// TODO this should not be needed because 'match' method should check.
+				// The further 'in' the check, the better the error message.
+				nestedContext.assertContext.checkMatchFailureIsOk(reader.getCurrent(), body);
+
 				reader.fetchLine();
 			}
 		} while (!reader.isEndOfFile());
 		
-		bindings.addList("collect", nestedBindingsList);
+		context.bindings.addList("collect", nestedBindingsList);
 		return true;
 	}
 

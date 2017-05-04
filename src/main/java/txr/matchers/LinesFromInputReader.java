@@ -34,4 +34,7 @@ public class LinesFromInputReader {
 		return index == inputText.length;
 	}
 
+	public String toString() {
+		return "Reader at line " + (index+1) + ": " + inputText[index]; 
+	}
 }

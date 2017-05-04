@@ -59,6 +59,7 @@ public class VariableMatcher extends HorizontalMatcher {
 				reader.setCurrent(start);
 				return false;
 			}
+			i++;
 		}
 		
 		return true;

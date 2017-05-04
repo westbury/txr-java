@@ -57,39 +57,49 @@ public class Parser {
 
 			case '@':
 				currentText.append(query.substring(textStart, i));
-
-				if (query.charAt(i+1) == '@') {
+				i++;
+				
+				/*
+				 * White space is allowed after the '@'. This can be used for
+				 * indentation on lines where the '@' must be the first
+				 * character.
+				 */
+				while (query.charAt(i) == ' ' || query.charAt(i) == '\t') {
+					i++;
+				}
+				
+				if (query.charAt(i) == '@') {
 					currentText.append('@');
-					i += 2;
+					i++;
 				} else {
 					if (currentText.length() != 0) {
 						currentLine.append(new TextNode(currentText.toString()));
 						currentText = new StringBuffer();
 					}
 
-					if (query.charAt(i+1) == ';') {
-						i += 2;
+					if (query.charAt(i) == ';') {
+						i++;
 
-						/* If a comment is at the start of a line then the
-					 entire line is a removed (the matcher does not require a blank
-					line).
+						/*
+						 * If a comment is at the start of a line then the
+						 * entire line is a removed (the matcher does not
+						 * require a blank line).
 						 */
 						if (!currentLine.isEmpty()) {
 							appendThisLine();
 						}
 
 						eatRestOfLine();
-					} else if (query.charAt(i+1) == '(') {
-						i += 2;
+					} else if (query.charAt(i) == '(') {
+						i++;
 						List<SubExpression> subExpressions = parseExpression();
 						currentLine.append(new Expr(subExpressions));
-					} else if (query.charAt(i+1) == '*') {
-						i += 2;
+					} else if (query.charAt(i) == '*') {
+						i++;
 						Ident ident = parseSidentOrBident();
 						ident.setLongMatch(true);
 						currentLine.append(ident);
 					} else {
-						i += 1;
 						Ident ident = parseSidentOrBident();
 						currentLine.append(ident);
 					}

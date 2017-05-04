@@ -18,6 +18,6 @@ public abstract class Matcher {
 	 * 			if no match this object is not altered
 	 * @return true if match, false if no match starting at this line
 	 */
-	public abstract boolean match(LinesFromInputReader reader, MatchResults bindings);
+	public abstract boolean match(LinesFromInputReader reader, MatchContext context);
 
 }

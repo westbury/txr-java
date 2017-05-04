@@ -1,41 +1,16 @@
 package txr.matchers;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
-public class MatchResults {
+public interface MatchResults {
 
-	private Map<String, Variable> variables = new HashMap<>();
+	boolean containsBinding(String variableId);
+
+	Variable getVariable(String variableId);
+
+	void addList(String key, List<MatchResultsBase> bindingsList);
 	
-	private List<List<MatchResults>> collections = new ArrayList<>();
-	
-	public Variable getVariable(String variableId) {
-		Variable var = variables.get(variableId);
-		if (var == null) {
-			var = new Variable(variableId);
-			variables.put(variableId, var);
-		}
-		return var;
-	}
+	List<MatchResultsBase> getCollections(int index);
 
-	public void addAll(MatchResults bindingsToAdd) {
-		// It's an internal error if entry already bound.
-		// We could check just to be safe.
-		variables.putAll(bindingsToAdd.variables);
-		
-		collections.addAll(bindingsToAdd.collections);
-		
-	}
 
-	public void addList(String key, List<MatchResults> bindingsList) {
-		collections.add(bindingsList);
-	}
-
-	public List<MatchResults> getCollections(int index) {
-		return collections.get(index);
-	}
-
-	
 }

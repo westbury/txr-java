@@ -51,6 +51,16 @@ public class DocumentMatcher {
 							processor = maybeMatcher;
 							break;
 
+						case "assert":
+							AssertMatcher assertMatcher = new AssertMatcher(expr);
+							processor.addNextMatcherInMatchSequence(assertMatcher);
+							break;
+
+						case "bind":
+							BindMatcher bindMatcher = new BindMatcher(expr);
+							processor.addNextMatcherInMatchSequence(bindMatcher);
+							break;
+
 						case "end":
 							processor = processorStack.pop();
 							break;
@@ -84,10 +94,13 @@ public class DocumentMatcher {
 
 	public MatchResults process(String [] inputText) {
 		LinesFromInputReader reader = new LinesFromInputReader(inputText);
-		MatchResults results = new MatchResults();
+		MatchResults results = new MatchResultsBase();
+		MatchContext context = new MatchContext(results);
 		
-		boolean matched = topLevelMatcher.match(reader, results);
+		boolean matched = topLevelMatcher.match(reader, context);
 
+		// TODO check asserts
+		
 		return matched ? results : null;
 	}
 

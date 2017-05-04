@@ -33,30 +33,12 @@ public abstract class ParallelMatcher extends VerticalMatcher {
 				break;
 				
 			default:
-				throw new RuntimeException("Unknown directive or unexpected at this location.");
+				throw new RuntimeException("Unknown directive " + symbol.symbolText + " or unexpected at this location.");
 		}
 	}
 	
 	protected abstract String getDirectiveName();
 	
-	@Override
-	public boolean match(LinesFromInputReader reader, MatchResults bindings) {
-		List<MatchResults> nestedBindingsList = new ArrayList<>();
-
-		for (MatchSequence eachMatchSequence : content) {
-			MatchResults nestedBindings = new MatchResults();
-
-			// Look for a match
-			if (eachMatchSequence.match(reader, nestedBindings)) {
-				nestedBindingsList.add(nestedBindings);
-				bindings.addList("cases", nestedBindingsList);
-				return true;
-			}
-		}
-		
-		return false;
-	}
-
 	public String toString() {
 		StringBuffer sb = new StringBuffer();
 		sb.append(getDirectiveName() + "[");

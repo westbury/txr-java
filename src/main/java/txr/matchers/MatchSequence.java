@@ -34,20 +34,27 @@ public class MatchSequence extends VerticalMatcher {
 	}
 
 	@Override
-	public boolean match(LinesFromInputReader reader, MatchResults bindings) {
-		MatchResults bindingsToAdd = new MatchResults();
-		
+	public boolean match(LinesFromInputReader reader, MatchContext context) {
 		int start = reader.getCurrent();
 		
+		/*
+		 * Note that we should not be adding bindings if this match fails.
+		 * Hence we need to create our sub-context.
+		 */
+		MatchResultsWithPending subBindings = new MatchResultsWithPending(context.bindings);
+		MatchContext subContext = new MatchContext(subBindings, context.assertContext);
+		
 		for (Matcher matcher : sequence) {
-			boolean matches = matcher.match(reader, bindingsToAdd);
+			boolean matches = matcher.match(reader, subContext);
 			if (!matches) {
+				// This check needs to be done here so the user sees the actual line that failed.
+				context.assertContext.checkMatchFailureIsOk(reader.getCurrent(), matcher);
 				reader.setCurrent(start);
 				return false;
 			}
 		}
 		
-		bindings.addAll(bindingsToAdd);
+		subBindings.commitPendingBindings();
 		return true;
 	}
 

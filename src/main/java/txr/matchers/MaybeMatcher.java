@@ -1,8 +1,5 @@
 package txr.matchers;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import txr.parser.Expr;
 
 public class MaybeMatcher extends ParallelMatcher {
@@ -19,19 +16,14 @@ public class MaybeMatcher extends ParallelMatcher {
 	}
 	
 	@Override
-	public boolean match(LinesFromInputReader reader, MatchResults bindings) {
-		List<MatchResults> nestedBindingsList = new ArrayList<>();
-
+	public boolean match(LinesFromInputReader reader, MatchContext context) {
 		int start = reader.getCurrent();
 		int longest = start;
 		
 		for (MatchSequence eachMatchSequence : content) {
-			MatchResults nestedBindings = new MatchResults();
-
-			// Look for a match
-			if (eachMatchSequence.match(reader, nestedBindings)) {
-				nestedBindingsList.add(nestedBindings);
-				bindings.addList("maybe", nestedBindingsList);
+			MatchContext subContext = new MatchContext(context.bindings);
+			
+			if (eachMatchSequence.match(reader, subContext)) {
 				
 				int endOfThisMatch = reader.getCurrent();
 				if (endOfThisMatch > longest) {
@@ -40,6 +32,14 @@ public class MaybeMatcher extends ParallelMatcher {
 				
 				// Reset for next one
 				reader.setCurrent(start);
+			} else {
+				/*
+				 * The sub-sequence did not match.  Check only that
+				 * the matching did not get as far as processing any @(assert)
+				 * directives inside the sub-sequence.  If an @(assert)
+				 * directive was processed then the failure to match is an error.
+				 */
+				subContext.assertContext.checkMatchFailureIsOk(reader.getCurrent(), eachMatchSequence);
 			}
 		}
 

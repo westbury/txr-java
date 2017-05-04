@@ -1,8 +1,5 @@
 package txr.matchers;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import txr.parser.Expr;
 
 public class CasesMatcher extends ParallelMatcher {
@@ -19,17 +16,25 @@ public class CasesMatcher extends ParallelMatcher {
 	}
 	
 	@Override
-	public boolean match(LinesFromInputReader reader, MatchResults bindings) {
-		List<MatchResults> nestedBindingsList = new ArrayList<>();
-
+	public boolean match(LinesFromInputReader reader, MatchContext context) {
+		/*
+		 * Look for a match, going through the cases in order. As soon as one of
+		 * the cases matches, we are done. If none match, this matcher does not
+		 * match.
+		 */
 		for (MatchSequence eachMatchSequence : content) {
-			MatchResults nestedBindings = new MatchResults();
-
-			// Look for a match
-			if (eachMatchSequence.match(reader, nestedBindings)) {
-				nestedBindingsList.add(nestedBindings);
-				bindings.addList("cases", nestedBindingsList);
+			MatchContext subContext = new MatchContext(context.bindings);
+			
+			if (eachMatchSequence.match(reader, subContext)) {
 				return true;
+			} else {
+				/*
+				 * The sub-sequence did not match.  Check only that
+				 * the matching did not get as far as processing any @(assert)
+				 * directives inside the sub-sequence.  If an @(assert)
+				 * directive was processed then the failure to match is an error.
+				 */
+				subContext.assertContext.checkMatchFailureIsOk(reader.getCurrent(), eachMatchSequence);
 			}
 		}
 		

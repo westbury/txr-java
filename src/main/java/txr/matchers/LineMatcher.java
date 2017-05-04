@@ -75,14 +75,14 @@ public class LineMatcher extends Matcher {
 	}
 
 	@Override
-	public boolean match(LinesFromInputReader documentReader, MatchResults bindings) {
+	public boolean match(LinesFromInputReader documentReader, MatchContext context) {
 		int start = documentReader.getCurrent();
 		String line = documentReader.fetchLine();
 		CharsFromInputLineReader reader = new CharsFromInputLineReader(line);
 		int i = 0;
 		while (i < matchers.size()) {
 			HorizontalMatcher matcher = matchers.get(i);
-				if (!matcher.match(reader, bindings)) {
+				if (!matcher.match(reader, context.bindings)) {
 					// Line cannot match
 					documentReader.setCurrent(start);
 					return false;
