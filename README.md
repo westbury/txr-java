@@ -27,5 +27,29 @@ To checkout code and build:
     ./gradlew eclipse         (on Linux / Mac OS)
     gradlew eclipse           (on Windows)
     
-    Note that this project has just started so you will have quite a bit to add before it will be usable for you.
-    
+Although only a small part of the entire TXR specification has been implemented,
+the features needed for decent extraction of data from typical multi-line text is all there.
+You should have no problem extracting data from automated e-mail (e.g. order confirmation messages)
+or text copied from web pages (ctrl-A, ctrl-C from the browser generally is easier and works better
+than trying to extract from the HTML).
+
+The following directives are supported:
+
+@(collect)
+@(maybe)
+@(cases)
+@(skip)
+@(assert)
+
+Most of the parameters to these directives are not supported.
+
+To use in your own product you will need to build the txr-java.jar and copy it into
+your build.  No release to Maven Central has yet been made.
+
+Currently features are being implemented only on an 'as required' basis.  If you need
+a feature of the TXR specification just let us know and it may get implemented.  We are also
+interested to know of anything where the matcher does not behave the same as the reference TXR matcher.
+
+Work going forward: It would be nice if the bindings went directly into Java setter methods.
+For example, pass a Java object into the matcher and, if the object has a setFoo(String) method
+then @foo bindings will bind to the method.     
