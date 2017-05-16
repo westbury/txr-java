@@ -63,13 +63,18 @@ public class DocumentMatcher {
 							processor.addNextMatcherInMatchSequence(assertMatcher);
 							break;
 
+						case "throw":
+							ThrowMatcher throwMatcher = new ThrowMatcher(expr);
+							processor.addNextMatcherInMatchSequence(throwMatcher);
+							break;
+
 						case "bind":
 							BindMatcher bindMatcher = new BindMatcher(expr);
 							processor.addNextMatcherInMatchSequence(bindMatcher);
 							break;
 
 						case "end":
-							if (processor instanceof SkipMatcher) {
+							while (processor instanceof SkipMatcher) {
 								/* If in the text following a @(skip) then
 								 * this text is being put into the @(skip) content,
 								 * so we really have to pop twice, first pop the @(skip)
@@ -88,6 +93,21 @@ public class DocumentMatcher {
 							 * only inside the lines for @(COLLECT). So pass on to
 							 * the processor for the current level.
 							 */
+
+							/*
+							 * Pop out of any @(skip) directives first.
+							 * For example, a @(skip) may be in a @(collect) but we then
+							 * get to the @(until) directive. 
+							 */
+							while (processor instanceof SkipMatcher) {
+								/* If in the text following a @(skip) then
+								 * this text is being put into the @(skip) content,
+								 * so we really have to pop twice, first pop the @(skip)
+								 * then pop the containing object which the @(end) is ending.
+								 */
+								processor = processorStack.pop();
+							}
+							
 							processor.addNextDirective(expr);	
 						}
 

@@ -5,6 +5,7 @@ import java.util.Iterator;
 import txr.parser.Expr;
 import txr.parser.IntegerLiteral;
 import txr.parser.SubExpression;
+import txr.parser.Symbol;
 
 public class SkipMatcher extends VerticalMatcher {
 
@@ -40,12 +41,15 @@ public class SkipMatcher extends VerticalMatcher {
 		}
 	}
 
-	private long getIntegerFromExpression(SubExpression expression) {
+	private Long getIntegerFromExpression(SubExpression expression) {
 		if (expression instanceof IntegerLiteral) {
 			IntegerLiteral literal = (IntegerLiteral)expression;
 			return literal.value;
+		} else if (expression instanceof Symbol && ((Symbol)expression).symbolText.equals("nil")) {
+			return null;
+		} else {
+			throw new RuntimeException("expression is not an integer");
 		}
-		throw new RuntimeException("expression is not an integer");
 	}
 
 	@Override
@@ -75,6 +79,6 @@ public class SkipMatcher extends VerticalMatcher {
 	public void addNextDirective(Expr directive) {
 		// There are no special directives allowed after a @(skip)
 		// that are not allowed in general.
-		throw new RuntimeException("Unknown directive or unexpected at this location.");
+		throw new RuntimeException("Unknown directive @(" + directive + ") or unexpected at this location.");
 	}
 }

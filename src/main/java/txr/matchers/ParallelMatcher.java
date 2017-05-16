@@ -33,7 +33,7 @@ public abstract class ParallelMatcher extends VerticalMatcher {
 				break;
 				
 			default:
-				throw new RuntimeException("Unknown directive " + symbol.symbolText + " or unexpected at this location.");
+				throw new RuntimeException("Unknown directive @(" + symbol.symbolText + ") or unexpected at this location.");
 		}
 	}
 	

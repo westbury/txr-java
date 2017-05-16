@@ -50,6 +50,13 @@ public class ParserTest {
 	}
 
 	@Test
+	public void Section_6_12_KeywordTest() {
+		Parser p = new Parser();
+		AST ast = p.parse("@(collect :maxgap 12 :mingap 5)");
+		assertEquals("[[[Symbol: collect, Symbol: :maxgap, Integer: 12, Symbol: :mingap, Integer: 5]]]", ast.toString());
+	}
+
+	@Test
 	public void Section_6_15_CharacterLiteralTest() {
 		Parser p = new Parser();
 		AST ast = p.parse("@(#\\nul #\\linefeed #\\pnul #\\x41 #\\o54 #\\))");

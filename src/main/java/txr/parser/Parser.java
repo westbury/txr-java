@@ -187,6 +187,15 @@ public class Parser {
 				}
 				break;
 
+			case ':':
+				// A keyword symbol
+				// Is this correct?  Can a keyword really
+				// contain all the lident characters???
+				// Note that ':' is not a lident character but
+				// the first character is not validated by the following method.
+				subExpression = parseLident();
+				break;
+
 			case '"':
 				// A string literal
 				i += 1;
