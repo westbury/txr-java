@@ -8,11 +8,11 @@ import txr.parser.Symbol;
 
 public class CollectMatcher extends VerticalMatcher {
 
-	Integer mintimes;
-	Integer maxtimes;
-	Integer lines;
-	Integer maxgap;
-	Integer mingap;
+	Long mintimes;
+	Long maxtimes;
+	Long lines;
+	Long maxgap;
+	Long mingap;
 
 	enum BlockType {
 		BODY,
@@ -36,7 +36,7 @@ public class CollectMatcher extends VerticalMatcher {
 		maxgap = keywordValues.removeInteger(":maxgap");
 		mingap = keywordValues.removeInteger(":mingap");
 		
-		Integer gap = keywordValues.removeInteger(":gap");
+		Long gap = keywordValues.removeInteger(":gap");
 		if (gap != null) {
 			if (mingap != null || maxgap != null) {
 				throw new RuntimeException("You cannot specify :gap if you have also specified either or both :mingap and :maxgap");
@@ -45,7 +45,7 @@ public class CollectMatcher extends VerticalMatcher {
 			maxgap = gap;
 		}
 
-		Integer times = keywordValues.removeInteger(":times");
+		Long times = keywordValues.removeInteger(":times");
 		if (times != null) {
 			if (mintimes != null || maxtimes != null) {
 				throw new RuntimeException("You cannot specify :times if you have also specified either or both :mintimes and :maxtimes");
@@ -99,6 +99,8 @@ public class CollectMatcher extends VerticalMatcher {
 	@Override
 	public boolean match(LinesFromInputReader reader, MatchContext context) {
 		List<MatchResultsBase> nestedBindingsList = new ArrayList<>();
+		int numberOfGapLines = 0;
+		int endOfLastMatch = reader.getCurrent();
 		do {
 			int start = reader.getCurrent();
 			if (until != null) {
@@ -150,6 +152,8 @@ public class CollectMatcher extends VerticalMatcher {
 			
 			if (body.match(reader, nestedContext)) {
 				nestedBindingsList.add(nestedBindings.extractPendingAsBase());
+				endOfLastMatch = reader.getCurrent();
+				numberOfGapLines = 0;
 			} else {
 				/*
 				 * The sub-sequence did not match.  Check only that
@@ -162,6 +166,18 @@ public class CollectMatcher extends VerticalMatcher {
 				nestedContext.assertContext.checkMatchFailureIsOk(reader.getCurrent(), body);
 
 				reader.fetchLine();
+				numberOfGapLines++;
+				
+				if (maxgap != null && numberOfGapLines > maxgap) {
+					/*
+					 * If we stop collecting because no match was found within
+					 * :maxgap lines then the input position is left at the end
+					 * of the last successful match.  (This is how TXR works when
+					 * :maxgap is zero - need to check behavior for non-zero maxgaps).
+					 */
+					reader.setCurrent(endOfLastMatch);
+					break;
+				}
 			}
 		} while (!reader.isEndOfFile());
 		
