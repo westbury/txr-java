@@ -1,5 +1,8 @@
 package txr.matchers;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
 import java.util.Stack;
 
 import txr.parser.AST;
@@ -137,6 +140,27 @@ public class DocumentMatcher {
 		// TODO check asserts
 		
 		return matched ? results : null;
+	}
+
+	/**
+	 * Parses input text where the text is supplied as a single String
+	 * with each line separated by '/n' or 
+	 * @param inputText
+	 * @return
+	 */
+	public MatchResults process(String inputText) {
+		List<String> inputTextList = new ArrayList<>();
+
+		try (Scanner scanner = new Scanner(inputText)) {
+			while (scanner.hasNextLine()) {
+				String line = scanner.nextLine();
+				inputTextList.add(line);
+			}
+		}
+
+		String [] inputTextArray = inputTextList.toArray(new String[0]);
+
+		return process(inputTextArray);
 	}
 
 	public String toString() {
