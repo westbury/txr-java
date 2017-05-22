@@ -182,4 +182,38 @@ public class DocumentMatcherTest {
 		assertEquals("27", matched.getVariable("x").text);
 	}
 
+	/**
+	 * Tests that the @(assert) context does not require each match
+	 * within an inner @(skip) to match.
+	 */
+	@Test
+	public void SkipTest() {
+		Parser p = new Parser();
+		AST ast = p.parse(
+	"@(skip)\n" +
+	"Match A\n" +
+	"@(assert)\n" +
+	"@(skip)\n" +
+	"Match B\n" +
+	""
+	);
+//		assertEquals("[[Text: *Match this*], [Text: *value = *, Ident: x], [Text: *Match this @ nine*]]", ast.toString());
+
+		DocumentMatcher m = new DocumentMatcher(ast);
+//		assertEquals("[Match on line: [Text: [*Match this*]], Match on line: [Text: [*value = *], {Variable: Ident: x, Following: [EOL]}], Match on line: [Text: [*Match this @ nine*]]]", m.toString());
+
+		String [] inputText = new String [] {
+				"foo",
+				"Match A",
+				"bar",
+				"Match B"
+		};
+		MatchResults matched = m.process(inputText);
+		assertNotNull(matched);
+	}
+
+
+
+	
+
 }
