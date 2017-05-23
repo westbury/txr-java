@@ -1,5 +1,6 @@
 package txr.matchers;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -8,12 +9,39 @@ import java.util.Stack;
 import txr.parser.AST;
 import txr.parser.Expr;
 import txr.parser.Line;
+import txr.parser.Parser;
 import txr.parser.SubExpression;
 import txr.parser.Symbol;
 
 public class DocumentMatcher {
 
 	private MatchSequence topLevelMatcher = new MatchSequence();
+
+	/**
+	 * 
+	 * @param txrInputStream an input stream containing TXR source
+	 * @param charsetName the encoding type used to convert bytes from the stream into characters
+	 * @throws IllegalArgumentException if the specified character set does not exist
+	 */
+	public DocumentMatcher(InputStream txrInputStream, String charsetName) {
+		this(buildAst(txrInputStream, charsetName));
+	}
+	
+	private static AST buildAst(InputStream txrInputStream, String charsetName) {
+		StringBuilder result = new StringBuilder("");
+
+		try (Scanner scanner = new Scanner(txrInputStream, charsetName)) {
+			while (scanner.hasNextLine()) {
+				String line = scanner.nextLine();
+				result.append(line).append("\n");
+			}
+		}
+
+		Parser p = new Parser();
+		AST ast = p.parse(result.toString());
+
+		return ast;
+	}
 
 	public DocumentMatcher(AST ast) {
 
