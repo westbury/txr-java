@@ -29,36 +29,48 @@ public class LineMatcher extends Matcher {
 			i++;
 		
 			if (node instanceof Ident) {
-				/* For any negative matcher, we create a matcher for the
-				negative matcher and all following positive matchers,
-				i.e. all following matchers up to either the end of the line
-				or the next negative matcher.  This composite matcher then
-				acts as a positive matcher.
-				*/
-				List<HorizontalMatcher> followingPositiveMatchers = new ArrayList<>();
+				Ident identNode = (Ident)node;
 				
-				if (i == line.nodes.size()) {
-					// Nothing more on line, so add a EOL matcher
-					followingPositiveMatchers.add(new EndOfLineMatcher());
+				if (identNode.regex == null) {
+					// It's a negative match.  See 6.9.
+
+					/*
+					 * For any negative matcher, we create a matcher for the
+					 * negative matcher and all following positive matchers,
+					 * i.e. all following matchers up to either the end of the
+					 * line or the next negative matcher. This composite matcher
+					 * then acts as a positive matcher.
+					 */
+					List<HorizontalMatcher> followingPositiveMatchers = new ArrayList<>();
+
+					if (i == line.nodes.size()) {
+						// Nothing more on line, so add a EOL matcher
+						followingPositiveMatchers.add(new EndOfLineMatcher());
+					} else {
+						Node textNode = line.nodes.get(i);
+						if (textNode instanceof Ident) {
+							throw new RuntimeException("Can't have two unbound variables");
+						}
+						followingPositiveMatchers.add(getMatcherFromNode(textNode));
+						i++;
+						while (i < line.nodes.size() && !((textNode = line.nodes.get(i)) instanceof Ident)) {
+							followingPositiveMatchers.add(getMatcherFromNode(textNode));
+							i++;
+						}
+						if (i == line.nodes.size()) {
+							// Nothing more on line, so add a EOL matcher
+							followingPositiveMatchers.add(new EndOfLineMatcher());
+						}
+					}
+					HorizontalMatcher followingMatcher = new TextSequenceMatcher(followingPositiveMatchers);
+					HorizontalMatcher variableMatcher = new VariableMatcher(identNode, followingMatcher);
+					matchers.add(variableMatcher);
 				} else {
-				Node textNode = line.nodes.get(i);
-				if (textNode instanceof Ident) {
-					throw new RuntimeException("Can't have two unbound variables");
+					// There is a regex so this is a positive matcher
+					
+					HorizontalMatcher variableMatcher = new VariableMatcherWithRegex(identNode, identNode.regex);
+					matchers.add(variableMatcher);
 				}
-				followingPositiveMatchers.add(getMatcherFromNode(textNode));
-				i++;
-				while (i < line.nodes.size() && !((textNode = line.nodes.get(i)) instanceof Ident)) {
-					followingPositiveMatchers.add(getMatcherFromNode(textNode));
-					i++;
-				}
-				if (i == line.nodes.size()) {
-					// Nothing more on line, so add a EOL matcher
-					followingPositiveMatchers.add(new EndOfLineMatcher());
-				}
-				}
-				HorizontalMatcher followingMatcher = new TextSequenceMatcher(followingPositiveMatchers);
-				HorizontalMatcher variableMatcher = new VariableMatcher((Ident)node, followingMatcher);
-				matchers.add(variableMatcher);
 			} else {
 				matchers.add(getMatcherFromNode(node));
 			}

@@ -571,8 +571,106 @@ public class Parser {
 		return new CharacterLiteral(c); 
 	}
 
-	private SubExpression parseRegularExpression() {
-		throw new UnsupportedOperationException();
+	/**
+	 * See section 6.13.  On entry, i will be positioned
+	 * at 
+	 * 
+	 * @return
+	 */
+	private RegularExpression parseRegularExpression() {
+		List<RegexMatcher> regexMatchers = new ArrayList<>();
+		
+		char c = query.charAt(i);
+		i++;
+		
+		do {
+			switch (c) {
+			case '.':
+				regexMatchers.add(new SingleCharMatcher(ch -> true));
+				break;
+				
+			case '\\':
+				c = query.charAt(i);
+				i++;
+
+				CharMatcher charMatcher;
+				
+				switch (c) {
+				case 's':
+					charMatcher = ch -> isWhiteSpace(ch);
+					break;
+					
+				case 'w':
+					charMatcher = ch -> isWordCharacter(ch);
+					break;
+					
+				case 'd':
+					charMatcher = ch -> isDigit(ch);
+					break;
+					
+				case 'S':
+					charMatcher = ch -> !isWhiteSpace(ch);
+					break;
+					
+				case 'W':
+					charMatcher = ch -> !isWordCharacter(ch);
+					break;
+					
+				case 'D':
+					charMatcher = ch -> !isDigit(ch);
+					break;
+					
+				case '\\':
+					charMatcher = ch -> ch == '\\';
+					break;
+					
+				case '/':
+					charMatcher = ch -> ch == '/';
+					break;
+					
+				case '.':
+					charMatcher = ch -> ch == '.';
+					break;
+					
+				case '[':
+					charMatcher = ch -> ch == '[';
+					break;
+					
+				default:
+					throw new UnsupportedOperationException();
+				}
+				regexMatchers.add(new SingleCharMatcher(charMatcher));
+				break;
+				
+			case '+':
+				int lastIndex = regexMatchers.size() - 1;
+				regexMatchers.set(lastIndex, new PlusMatcher(regexMatchers.get(lastIndex)));
+				break;
+				
+			case '[':
+				throw new RuntimeException("Character classes, designated by [....], are not yet supported.");
+				
+			default:
+				throw new UnsupportedOperationException();
+			}
+			
+			c = query.charAt(i);
+			i++;
+		} while (c != '/' && i < query.length());
+		
+		if (c != '/') {
+			throw new RuntimeException("Regex not terminated on same line");
+		}
+		
+		return new RegularExpression(regexMatchers);
+	}
+
+	boolean isWordCharacter(char c) {
+		return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || c == '_';
+	}
+
+	boolean isDigit(char c) {
+		return c >= '0' && c <= '9';
 	}
 
 	/**
@@ -745,14 +843,45 @@ public class Parser {
 				c = query.charAt(i);
 			} while (isValidBidentChar(c));
 
+			String id = query.substring(start, i);
+			Ident result = new Ident(id);
+			
+			if (isWhiteSpace(query.charAt(i))) {
+				/*
+				 * A bident may have a regular expression associated with it.
+				 * Any regular expression will be separated from the bident
+				 * itself by whitespace and will be inside the curly braces.
+				 * See 6.8 of the manual.
+				 */
+				do {
+					i++;
+				} while (isWhiteSpace(query.charAt(i)));
+			
+				c = query.charAt(i);
+				i++;
+				if (c != '/') {
+					throw new RuntimeException("Regular expression expected in bident but found: " + c);
+				}
+				
+				RegularExpression regex = parseRegularExpression();
+				result.setRegex(regex);
+			}
+
+			// TODO check to see if there can be whitespace here
+			c = query.charAt(i);
+			i++;
 			if (c != '}') {
 				throw new RuntimeException("Invalid character in bident: " + c);
 			}
-			String id = query.substring(start, i);
-			return new Ident(id);
+			
+			return result;
 		} else {
 			return parseSident();
 		}
+	}
+
+	private boolean isWhiteSpace(char c) {
+		return c == ' ' || c == '\t';
 	}
 
 	private Ident parseSident() {

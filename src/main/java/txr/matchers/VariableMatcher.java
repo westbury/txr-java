@@ -51,18 +51,20 @@ public class VariableMatcher extends HorizontalMatcher {
 			return false;
 		} else {
 
-		int start = reader.getCurrent();
-		
-		int i = 0;
-		while (i < var.text.length()) {
-			if (var.text.charAt(i) != reader.fetchChar()) {
-				reader.setCurrent(start);
-				return false;
+			int start = reader.getCurrent();
+
+			int i = 0;
+			while (i < var.text.length()) {
+				if (var.text.charAt(i) != reader.fetchChar()) {
+					reader.setCurrent(start);
+					return false;
+				}
+				i++;
 			}
-			i++;
-		}
-		
-		return true;
+
+			// TODO we must check the following text here....
+			
+			return true;
 		}
 	}
 

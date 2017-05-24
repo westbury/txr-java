@@ -5,6 +5,12 @@ public class Ident extends Node {
 	public final String id;
 	
 	private boolean longMatch;
+
+	/**
+	 * non-null only if a regular expression was specified
+	 * for a bident
+	 */
+	public RegularExpression regex = null;
 	
 	public Ident(String id) {
 		this.id = id;
@@ -20,5 +26,10 @@ public class Ident extends Node {
 		} else {
 			return "Ident: " + id;
 		}
+	}
+
+	public void setRegex(RegularExpression regex) {
+		this.regex = regex;
+		
 	}
 }
