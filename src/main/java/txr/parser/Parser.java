@@ -3,6 +3,8 @@ package txr.parser;
 import java.util.ArrayList;
 import java.util.List;
 
+import txr.matchers.CharsFromInputLineReader;
+
 
 /**
  * This class parses an input stream and produces an abstract
@@ -160,7 +162,7 @@ public class Parser {
 				case '/':
 					// A regular expression
 					i += 2;
-					subExpression = parseRegularExpression();
+					subExpression = parseRegularExpression('/');
 					break;
 				case '\\':
 					//http://marketplace.eclipse.org/marketplace-client-intro?mpc_install=194 A character literal
@@ -573,29 +575,34 @@ public class Parser {
 
 	/**
 	 * See section 6.13.  On entry, i will be positioned
-	 * at 
+	 * at the first character after the '/', being the first
+	 * character of the regular expression.  On exit, i will be
+	 * positioned at the first character after the terminating '/'.
 	 * 
-	 * @return
+	 * @return an implementation of SubExpression that represents the
+	 * 			regular expression
 	 */
-	private RegularExpression parseRegularExpression() {
+	private RegularExpression parseRegularExpression(char terminatingChar) {
 		List<RegexMatcher> regexMatchers = new ArrayList<>();
 		
 		char c = query.charAt(i);
 		i++;
 		
 		do {
-			switch (c) {
+			final char c1 = c;
+			
+			switch (c1) {
 			case '.':
 				regexMatchers.add(new SingleCharMatcher(ch -> true));
 				break;
 				
 			case '\\':
-				c = query.charAt(i);
+				final char c2 = query.charAt(i);
 				i++;
 
 				CharMatcher charMatcher;
 				
-				switch (c) {
+				switch (c2) {
 				case 's':
 					charMatcher = ch -> isWhiteSpace(ch);
 					break;
@@ -643,26 +650,183 @@ public class Parser {
 				break;
 				
 			case '+':
+			{
 				int lastIndex = regexMatchers.size() - 1;
 				regexMatchers.set(lastIndex, new PlusMatcher(regexMatchers.get(lastIndex)));
 				break;
+			}
+
+			case '?':
+			{
+				int lastIndex = regexMatchers.size() - 1;
+				regexMatchers.set(lastIndex, new OptionalMatcher(regexMatchers.get(lastIndex)));
+				break;
+			}
 				
 			case '[':
-				throw new RuntimeException("Character classes, designated by [....], are not yet supported.");
+				charMatcher = parseCharacterClass();
+				regexMatchers.add(new SingleCharMatcher(charMatcher));
+				break;
+				
+			case '(':
+				// TODO clean this up.  It's a bit silly to call a method that
+				// creates a RegularExpression object, then wrap it to make
+				// it back into a RegexMatcher object.
+				// In fact, what is the difference between RegularExpression
+				// and RegexMatcher anyway.
+				RegularExpression subExpression = parseRegularExpression(')');
+				regexMatchers.add(new RegexMatcher() {
+					@Override
+					public boolean match(CharsFromInputLineReader reader) {
+						return subExpression.match(reader);
+					}
+				});
+				break;
 				
 			default:
-				throw new UnsupportedOperationException();
+				// Anything else, it must be an exact match
+				charMatcher = ch -> ch == c1;
+				regexMatchers.add(new SingleCharMatcher(charMatcher));
+				break;
 			}
 			
 			c = query.charAt(i);
 			i++;
-		} while (c != '/' && i < query.length());
+		} while (c != terminatingChar && i < query.length());
 		
-		if (c != '/') {
+		if (c != terminatingChar) {
 			throw new RuntimeException("Regex not terminated on same line");
 		}
 		
 		return new RegularExpression(regexMatchers);
+	}
+
+	/**
+	 * See section 6.13.  On entry, i will be positioned
+	 * at the first character after the '[', being the first
+	 * character of the single-character pattern.  On exit, i will be
+	 * positioned at the first character after the terminating ']'.
+	 * 
+	 * @return an implementation of CharMatcher
+	 */
+	private CharMatcher parseCharacterClass() {
+		List<CharMatcher> charMatchers = new ArrayList<>();
+		
+		char c = query.charAt(i);
+		i++;
+		
+		boolean isNegated = false;
+		if (c == '^') {
+			isNegated = true;
+			i++;
+		}
+
+		do {
+			final char c1 = c;
+			
+			CharMatcher charMatcher;
+			
+			switch (c1) {
+			case '\\':
+				final char c2 = query.charAt(i);
+				i++;
+
+				switch (c2) {
+				case 's':
+					charMatcher = ch -> isWhiteSpace(ch);
+					break;
+					
+				case 'w':
+					charMatcher = ch -> isWordCharacter(ch);
+					break;
+					
+				case 'd':
+					charMatcher = ch -> isDigit(ch);
+					break;
+					
+				case '\\':
+					charMatcher = ch -> ch == '\\';
+					break;
+					
+				case '^':
+					charMatcher = ch -> ch == '^';
+					break;
+					
+				case '-':
+					charMatcher = ch -> ch == '-';
+					break;
+					
+				case '[':
+					charMatcher = ch -> ch == '[';
+					break;
+					
+				case ']':
+					charMatcher = ch -> ch == '[';
+					break;
+					
+				default:
+					throw new UnsupportedOperationException();
+				}
+				break;
+				
+			default:
+				// Anything else, it must be an exact match or range
+				if (query.charAt(i) == '-') {
+					i++;
+
+					char cRangeEnd = query.charAt(i);
+					i++;
+					
+					// It's a range
+					if (c1 >= 'A' && c1 <= 'Z') {
+						if (cRangeEnd < 'A' || cRangeEnd > 'Z') {
+							throw new RuntimeException("The character class range is invalid.  If the range starts with an upper case letter then it must also end with an upper case letter.");
+						}
+						charMatcher = ch -> ch >= c1 && ch <= cRangeEnd;
+					} else if (c1 >= 'a' && c1 <= 'z') {
+						if (cRangeEnd < 'a' || cRangeEnd > 'z') {
+							throw new RuntimeException("The character class range is invalid.  If the range starts with a lower case letter then it must also end with a lower case letter.");
+						}
+						charMatcher = ch -> ch >= c1 && ch <= cRangeEnd;
+					} else if (c1 >= '0' && c1 <= '9') {
+						if (cRangeEnd < '0' || cRangeEnd > '9') {
+							throw new RuntimeException("The character class range is invalid.  If the range starts with a digit then it must also end with a digit.");
+						}
+						charMatcher = ch -> ch >= c1 && ch <= cRangeEnd;
+					} else {
+						throw new RuntimeException("A range cannot start with '" + c1 + "'.  Ranges can only be ranges of letters or digits.");
+					}
+				} else {
+					// It's a single character
+					charMatcher = ch -> ch == c1;
+				}
+				break;
+			}
+			
+			charMatchers.add(charMatcher);
+
+			c = query.charAt(i);
+			i++;
+		} while (c != ']' && i < query.length());
+		
+		if (c != ']') {
+			throw new RuntimeException("Regex character class ([...]) not terminated on same line");
+		}
+
+		CharMatcher aggregateCharMatcher =
+				ch -> orTogether(charMatchers, ch);
+				
+		if (isNegated) {
+			return ch -> !aggregateCharMatcher.isMatch(ch);
+		} else {
+			return aggregateCharMatcher;
+		}
+	}
+	
+	private boolean orTogether(List<CharMatcher> charMatchers, char c) {
+		return charMatchers.stream()
+				.map(matcher -> matcher.isMatch(c))
+				.reduce(false, (b1, b2) -> b1 || b2);
 	}
 
 	boolean isWordCharacter(char c) {
@@ -676,7 +840,7 @@ public class Parser {
 	/**
 	 * This may be a number or a lident.  A lident may
 	 * consist of any combination of letters, digits,
-	 * and ! $ % & * + - < = > ? \ _ ˜ /
+	 * and ! $ % & * + - < = > ? \ _ ~ /
 	 * 
 	 * A number
 	 * @return
@@ -699,7 +863,7 @@ public class Parser {
 	/**
 	 * This may be a number or a lident.  A lident may
 	 * consist of any combination of letters, digits,
-	 * and ! $ % & * + - < = > ? \ _ ˜ /
+	 * and ! $ % & * + - < = > ? \ _ ~ /
 	 * 
 	 * A number
 	 * 
@@ -863,7 +1027,7 @@ public class Parser {
 					throw new RuntimeException("Regular expression expected in bident but found: " + c);
 				}
 				
-				RegularExpression regex = parseRegularExpression();
+				RegularExpression regex = parseRegularExpression('/');
 				result.setRegex(regex);
 			}
 

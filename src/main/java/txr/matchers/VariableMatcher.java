@@ -31,6 +31,9 @@ public class VariableMatcher extends HorizontalMatcher {
 			do {
 				int j = reader.getCurrent();
 
+if (j == 48) {
+	System.out.println("here");
+}
 				if (followingMatcher.match(reader, bindings)) {
 					// We're done.  We have a match
 
@@ -62,7 +65,10 @@ public class VariableMatcher extends HorizontalMatcher {
 				i++;
 			}
 
-			// TODO we must check the following text here....
+			// Don't forget to match the following text too.
+			if (!followingMatcher.match(reader, bindings)) {
+				return false;
+			}
 			
 			return true;
 		}

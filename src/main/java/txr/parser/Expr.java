@@ -10,6 +10,11 @@ public class Expr extends Node {
 		this.subExpressions = subExpressions;
 	}
 
+	@Override
+	public boolean isNegativeMatcher() {
+		return false;
+	}
+
 	public String toString() {
 		return subExpressions.toString();
 	}

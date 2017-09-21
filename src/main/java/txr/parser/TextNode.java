@@ -8,6 +8,11 @@ public class TextNode extends Node {
 		this.text = text;
 	}
 
+	@Override
+	public boolean isNegativeMatcher() {
+		return false;
+	}
+
 	public String toString() {
 		return "Text: *" + text + "*";
 	}

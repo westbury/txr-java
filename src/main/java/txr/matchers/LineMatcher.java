@@ -48,12 +48,12 @@ public class LineMatcher extends Matcher {
 						followingPositiveMatchers.add(new EndOfLineMatcher());
 					} else {
 						Node textNode = line.nodes.get(i);
-						if (textNode instanceof Ident) {
-							throw new RuntimeException("Can't have two unbound variables");
+						if (textNode.isNegativeMatcher()) {
+							throw new RuntimeException("Can't have two consecutive negative matchers");
 						}
 						followingPositiveMatchers.add(getMatcherFromNode(textNode));
 						i++;
-						while (i < line.nodes.size() && !((textNode = line.nodes.get(i)) instanceof Ident)) {
+						while (i < line.nodes.size() && !(textNode = line.nodes.get(i)).isNegativeMatcher()) {
 							followingPositiveMatchers.add(getMatcherFromNode(textNode));
 							i++;
 						}
@@ -80,6 +80,13 @@ public class LineMatcher extends Matcher {
 	private HorizontalMatcher getMatcherFromNode(Node node) {
 		if (node instanceof TextNode) {
 			return new TextMatcher((TextNode)node);
+		} else if (node instanceof Ident) {
+			Ident identNode = (Ident)node;
+			if (identNode.regex == null) {
+				// It should not be possible for this to happen.
+				throw new RuntimeException("Unsupported node");
+			}
+			return new VariableMatcherWithRegex(identNode, identNode.regex);
 		} else {
 			// It should not be possible for this to happen.
 			throw new RuntimeException("Unsupported node");

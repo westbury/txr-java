@@ -212,6 +212,24 @@ public class DocumentMatcherTest {
 		assertNotNull(matched);
 	}
 
+	@Test
+	public void RegularExpressionTest() {
+		Parser p = new Parser();
+		AST ast = p.parse("@{transactiondate /\\d\\d [A-Z]+/} @{entereddate /\\d\\d [A-Z]+/} @description @{amount /\\d+\\.\\d\\d( CR)?/}");
+
+		DocumentMatcher m = new DocumentMatcher(ast);
+
+		String [] inputText = new String [] {
+				"30 AUGUST 31 AUGUST PAYMENT RECEIVED - THANK YOU 100.00 CR"
+		};
+		MatchResults matched = m.process(inputText);
+		assertNotNull(matched);
+		assertEquals("30 AUGUST", matched.getVariable("transactiondate").text);
+		assertEquals("31 AUGUST", matched.getVariable("entereddate").text);
+		assertEquals("PAYMENT RECEIVED - THANK YOU", matched.getVariable("description").text);
+		assertEquals("100.00 CR", matched.getVariable("amount").text);
+	}
+
 
 
 	

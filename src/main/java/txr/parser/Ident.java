@@ -16,8 +16,17 @@ public class Ident extends Node {
 		this.id = id;
 	}
 
+	@Override
+	public boolean isNegativeMatcher() {
+		return regex == null;
+	}
+
 	public void setLongMatch(boolean longMatch) {
 		this.longMatch = longMatch;
+	}
+
+	public void setRegex(RegularExpression regex) {
+		this.regex = regex;
 	}
 
 	public String toString() {
@@ -26,10 +35,5 @@ public class Ident extends Node {
 		} else {
 			return "Ident: " + id;
 		}
-	}
-
-	public void setRegex(RegularExpression regex) {
-		this.regex = regex;
-		
 	}
 }
