@@ -152,6 +152,11 @@ public class CollectMatcher extends VerticalMatcher {
 			
 			if (body.match(reader, nestedContext)) {
 				nestedBindingsList.add(nestedBindings.extractPendingAsBase());
+				
+				if (maxtimes != null && nestedBindingsList.size() == maxtimes) {
+					break;
+				}
+				
 				endOfLastMatch = reader.getCurrent();
 				numberOfGapLines = 0;
 			} else {
@@ -181,6 +186,12 @@ public class CollectMatcher extends VerticalMatcher {
 			}
 		} while (!reader.isEndOfFile());
 		
+		if (mintimes != null) {
+			if (nestedBindingsList.size() < mintimes) {
+				return false;
+			}
+		}
+
 		context.bindings.addList("collect", nestedBindingsList);
 		return true;
 	}
