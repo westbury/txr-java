@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 public class MatchResultsBase implements MatchResults {
 
@@ -32,23 +33,24 @@ public class MatchResultsBase implements MatchResults {
 	}
 
 	public String toString() {
-		return variables.toString() + collections.toString();
-//		StringBuffer sb = new StringBuffer();
-//		sb.append("{");
-//		String separator = "";
-//		for (Entry<String, Variable> entry : variables.entrySet()) {
-//			sb.append(separator).append(entry.getKey()).append('=').append(entry.getValue());
-//			separator=",";
-//		}
-//		sb.append("}");
-//
-//		separator = "";
-//		Object entry;
-//		for (entry : collections) {
-//			sb.append(separator).append(entry.getKey()).append('=').append(entry.getValue());
-//			separator=",";
-//		}
-//		sb.append("}");
+		StringBuffer sb = new StringBuffer();
+		sb.append("{\n");
+		for (Entry<String, Variable> entry : variables.entrySet()) {
+			final String value = entry.getValue().toString();
+			sb.append("    " + value.replaceAll("\n", "\n    ") + "\n");
+		}
+
+		for (List<MatchResultsBase> entry2 : collections) {
+			sb.append("    [\n");
+			for (MatchResultsBase entry3 : entry2) {
+				final String value = entry3.toString();
+				sb.append("        " + value.replaceAll("\n", "\n        ") + "\n");
+			}
+			sb.append("    ]\n");
+		}
+		sb.append("}");
+		
+		return sb.toString();
 	}
 
 	@Override
