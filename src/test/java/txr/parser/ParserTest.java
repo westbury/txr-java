@@ -4,6 +4,7 @@
 package txr.parser;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -14,6 +15,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import txr.matchers.DocumentMatcher;
+import txr.matchers.MatchResults;
+import txr.matchers.TxrException;
 
 /**
  * @author Nigel
@@ -54,6 +59,15 @@ public class ParserTest {
 		Parser p = new Parser();
 		AST ast = p.parse("@(collect :maxgap 12 :mingap 5)");
 		assertEquals("[[[Symbol: collect, Symbol: :maxgap, Integer: 12, Symbol: :mingap, Integer: 5]]]", ast.toString());
+	}
+
+	@Test (expected = TxrException.class)
+	public void Section_6_12_KeywordWithInvalidFollowingWhitespaceTest() {
+		Parser p = new Parser();
+		AST ast = p.parse("@(collect :maxgap 12 :mingap 5)  \n@line\n@(end)");
+		assertEquals("[[[Symbol: collect, Symbol: :maxgap, Integer: 12, Symbol: :mingap, Integer: 5], Text: *  *], [Ident: line], [[Symbol: end]]]", ast.toString());
+
+		new DocumentMatcher(ast);
 	}
 
 	@Test

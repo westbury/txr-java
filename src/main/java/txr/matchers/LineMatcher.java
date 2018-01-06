@@ -3,6 +3,7 @@ package txr.matchers;
 import java.util.ArrayList;
 import java.util.List;
 
+import txr.parser.Expr;
 import txr.parser.Ident;
 import txr.parser.Line;
 import txr.parser.Node;
@@ -10,10 +11,10 @@ import txr.parser.TextNode;
 
 /**
  * A matcher that matches a given line from the TXR file.
- * 
+ * <P>
  * The given line must be something that can be matched to a line
  * of input.  For example the line cannot contain a vertical directive
- * or, for example, be an @(end) line.
+ * or be an @(end) line.
  * 
  * @author Nigel
  *
@@ -88,8 +89,17 @@ public class LineMatcher extends Matcher {
 			}
 			return new VariableMatcherWithRegex(identNode, identNode.regex);
 		} else {
-			// It should not be possible for this to happen.
-			throw new RuntimeException("Unsupported node");
+			/*
+			 * This could happen if there is an Expr node that is either not a vertical directive or is on
+			 * a line with other text (which prevents it being processed as a vertical directive).
+			 */
+			if (node instanceof Expr) {
+				Expr expression = (Expr)node;
+				throw new TxrException("An expression has been found.  This expression occurs on a line with other data (there are characters on the line outside the expression), yet this is not a supported horizontal directive,", expression.subExpressions, 0);
+			} else {
+				// It should not be possible for this to happen
+				throw new RuntimeException("Unsupported node");
+			}
 		}
 	}
 
