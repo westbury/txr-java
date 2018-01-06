@@ -230,8 +230,33 @@ public class DocumentMatcherTest {
 		assertEquals("100.00 CR", matched.getVariable("amount").text);
 	}
 
+	@Test
+	public void Section_6_13_RegexTest1() {
+		Parser p = new Parser();
+		AST ast = p.parse("@{amount /(\\d+,)?\\d+\\.\\d\\d/}");
 
+		DocumentMatcher m = new DocumentMatcher(ast);
 
-	
+		String [] inputText = new String [] {
+				"23,232.32"
+		};
+		MatchResults matched = m.process(inputText);
+		assertNotNull(matched);
+	}
+
+	@Test
+	public void Section_6_13_RegexTest2() {
+		Parser p = new Parser();
+		AST ast = p.parse("@{amount /[\\dA-Z]+/}");
+
+		DocumentMatcher m = new DocumentMatcher(ast);
+
+		String [] inputText = new String [] {
+				"23A23X32"
+		};
+		MatchResults matched = m.process(inputText);
+		assertNotNull(matched);
+	}
+
 
 }

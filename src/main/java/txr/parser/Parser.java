@@ -769,6 +769,9 @@ public class Parser {
 				}
 				break;
 				
+			case '-':
+				throw new UnsupportedOperationException("A '-' has been found in a character class. However the previous character was not a character that could be the start of the range.");
+
 			default:
 				// Anything else, it must be an exact match or range
 				if (query.charAt(i) == '-') {
