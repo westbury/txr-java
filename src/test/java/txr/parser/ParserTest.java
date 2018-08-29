@@ -48,21 +48,21 @@ public class ParserTest {
 	}
 
 	@Test
-	public void SimpleTest() {
+	public void SimpleTest() throws TxrErrorInDocumentException {
 		Parser p = new Parser();
 		AST ast = p.parse("Match this\nvalue = @(x)\nMatch this @@ nine");
 		assertEquals("[[Text: *Match this*], [Text: *value = *, [Symbol: x]], [Text: *Match this @ nine*]]", ast.toString());
 	}
 
 	@Test
-	public void Section_6_12_KeywordTest() {
+	public void Section_6_12_KeywordTest() throws TxrErrorInDocumentException {
 		Parser p = new Parser();
 		AST ast = p.parse("@(collect :maxgap 12 :mingap 5)");
 		assertEquals("[[[Symbol: collect, Symbol: :maxgap, Integer: 12, Symbol: :mingap, Integer: 5]]]", ast.toString());
 	}
 
 	@Test (expected = TxrException.class)
-	public void Section_6_12_KeywordWithInvalidFollowingWhitespaceTest() {
+	public void Section_6_12_KeywordWithInvalidFollowingWhitespaceTest() throws TxrErrorInDocumentException {
 		Parser p = new Parser();
 		AST ast = p.parse("@(collect :maxgap 12 :mingap 5)  \n@line\n@(end)");
 		assertEquals("[[[Symbol: collect, Symbol: :maxgap, Integer: 12, Symbol: :mingap, Integer: 5], Text: *  *], [Ident: line], [[Symbol: end]]]", ast.toString());
@@ -71,49 +71,49 @@ public class ParserTest {
 	}
 
 	@Test
-	public void Section_6_15_CharacterLiteralTest() {
+	public void Section_6_15_CharacterLiteralTest() throws TxrErrorInDocumentException {
 		Parser p = new Parser();
 		AST ast = p.parse("@(#\\nul #\\linefeed #\\pnul #\\x41 #\\o54 #\\))");
 		assertEquals("[[[Char: 0, Char: 10, Char: 56320, Char: 65, Char: 44, Char: 41]]]", ast.toString());
 	}
 
 	@Test
-	public void Section_6_16_BasicTest() { 
+	public void Section_6_16_BasicTest() throws TxrErrorInDocumentException { 
 		Parser p = new Parser();
 		AST ast = p.parse("@(\"foo \\x21;; \\51; \\n \\t  bar\")");
 		assertEquals("[[[String: *foo !; ) \n \t  bar*]]]", ast.toString());
 	}
 
 	@Test
-	public void Section_6_16_Continuation1Test() {
+	public void Section_6_16_Continuation1Test() throws TxrErrorInDocumentException {
 		Parser p = new Parser();
 		AST ast = p.parse("@(\"foo   \\\n  bar\")");
 		assertEquals("[[[String: *foobar*]]]", ast.toString());
 	}
 
 	@Test
-	public void Section_6_16_Continuation2Test() {
+	public void Section_6_16_Continuation2Test() throws TxrErrorInDocumentException {
 		Parser p = new Parser();
 		AST ast = p.parse("@(\"foo \\  \\\n  bar\")");
 		assertEquals("[[[String: *foo  bar*]]]", ast.toString());
 	}
 
 	@Test
-	public void Section_6_16_Continuation3Test() {
+	public void Section_6_16_Continuation3Test() throws TxrErrorInDocumentException {
 		Parser p = new Parser();
 		AST ast = p.parse("@(\"foo   \\\n \\  bar\")");
 		assertEquals("[[[String: *foo  bar*]]]", ast.toString());
 	}
 
 	@Test
-	public void IntegerTest() {
+	public void IntegerTest() throws TxrErrorInDocumentException {
 		Parser p = new Parser();
 		AST ast = p.parse("@(#o24 #x3f #b-1101)");
 		assertEquals("[[[Integer: 20, Integer: 63, Integer: -13]]]", ast.toString());
 	}
 
 	@Test
-	public void Section_6_20_IntegerTest() {
+	public void Section_6_20_IntegerTest() throws TxrErrorInDocumentException {
 		Parser p = new Parser();
 //		AST ast = p.parse("@(123 -34 +0 -0 +234483527304983792384729384723234)");
 		AST ast = p.parse("@(123 -34 +0 -0 +2344835273049837)");
@@ -121,52 +121,52 @@ public class ParserTest {
 	}
 
 	@Test
-	public void Section_6_20_FloatingPointTest() {
+	public void Section_6_20_FloatingPointTest() throws TxrErrorInDocumentException {
 		Parser p = new Parser();
 		AST ast = p.parse("@(.123 123. 1E-3 20E40 .9E1 9.e19 -.5 +3E+3 1.E5)");
 		assertEquals("[[[Float: 0.123, Float: 123.0, Float: 0.001, Float: 2.0E41, Float: 9.0, Float: 9.0E19, Float: -0.5, Float: 3000.0, Float: 100000.0]]]", ast.toString());
 	}
 
 	@Test
-	public void Section_6_20_BadFloatingPoint1() {
+	public void Section_6_20_BadFloatingPoint1() throws TxrErrorInDocumentException {
 		Parser p = new Parser();
 		AST ast = p.parse("@(123E)");
 		assertEquals("[[[Symbol: 123E]]]", ast.toString());
 	}
 
 	@Test (expected = RuntimeException.class)
-	public void Section_6_20_BadFloatingPoint2() {
+	public void Section_6_20_BadFloatingPoint2() throws TxrErrorInDocumentException {
 		Parser p = new Parser();
 		p.parse("@(1.0E-)");
 	}
 
 	@Test (expected = RuntimeException.class)
-	public void Section_6_20_BadFloatingPoint3() {
+	public void Section_6_20_BadFloatingPoint3() throws TxrErrorInDocumentException {
 		Parser p = new Parser();
 		p.parse("@(1.0E)");
 	}
 
 	@Test (expected = RuntimeException.class)
-	public void Section_6_20_BadFloatingPoint4() {
+	public void Section_6_20_BadFloatingPoint4() throws TxrErrorInDocumentException {
 		Parser p = new Parser();
 		p.parse("@(1.E)");
 	}
 
 	@Test (expected = RuntimeException.class)
-	public void Section_6_20_BadFloatingPoint5() {
+	public void Section_6_20_BadFloatingPoint5() throws TxrErrorInDocumentException {
 		Parser p = new Parser();
 		p.parse("@(.e)");
 	}
 
 	@Test
-	public void Section_6_21_Test() {
+	public void Section_6_21_Test() throws TxrErrorInDocumentException {
 		Parser p = new Parser();
 		AST ast = p.parse("@(foo ; this is a comment\n  bar ; this is another comment\n  )");
 		assertEquals("[[[Symbol: foo, Symbol: bar]]]", ast.toString());
 	}
 
 	@Test
-	public void CollectTest() {
+	public void CollectTest() throws TxrErrorInDocumentException {
 		Parser p = new Parser();
 		AST ast = p.parse("Introduction\n"
 				+ "\n"
@@ -183,7 +183,7 @@ public class ParserTest {
 	}
 
 	@Test
-	public void JohnLewisTest() throws IOException, URISyntaxException {
+	public void JohnLewisTest() throws IOException, URISyntaxException, TxrErrorInDocumentException {
 		Parser p = new Parser();
 
 		ClassLoader classLoader = getClass().getClassLoader();

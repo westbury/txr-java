@@ -32,7 +32,7 @@ public class Parser {
 
 	private AST ast = new AST();
 
-	public AST parse(String query) {
+	public AST parse(String query) throws TxrErrorInDocumentException {
 		this.query = query;
 
 		currentLine = new Line();
@@ -40,6 +40,11 @@ public class Parser {
 		int textStart = 0;
 		StringBuffer currentText = new StringBuffer();
 
+		/** used for error reporting only */
+		int currentLineNumber = 1;
+		
+		TxrErrorInDocumentException documentErrors = new TxrErrorInDocumentException();
+		
 		int queryLength = query.length();
 		do {
 			char c = query.charAt(i);
@@ -53,6 +58,8 @@ public class Parser {
 					currentText = new StringBuffer();
 				}
 				appendThisLine();
+				currentLineNumber++;
+				
 				i += 1;
 				textStart = i;
 				break;
@@ -94,16 +101,30 @@ public class Parser {
 						eatRestOfLine();
 					} else if (query.charAt(i) == '(') {
 						i++;
-						List<SubExpression> subExpressions = parseExpression();
-						currentLine.append(new Expr(subExpressions));
+						try {
+							List<SubExpression> subExpressions = parseExpression();
+							currentLine.append(new Expr(subExpressions));
+						} catch (TxrErrorOnLineException e) {
+							documentErrors.add(currentLineNumber, e);
+						}
 					} else if (query.charAt(i) == '*') {
 						i++;
-						Ident ident = parseSidentOrBident();
-						ident.setLongMatch(true);
-						currentLine.append(ident);
+						try {
+							Ident ident = parseSidentOrBident();
+							ident.setLongMatch(true);
+							currentLine.append(ident);
+						} catch (TxrErrorOnLineException e) {
+							// TODO how do we recover?
+							documentErrors.add(currentLineNumber, e);
+						}
 					} else {
-						Ident ident = parseSidentOrBident();
-						currentLine.append(ident);
+						try {
+							Ident ident = parseSidentOrBident();
+							currentLine.append(ident);
+						} catch (TxrErrorOnLineException e) {
+							// TODO how do we recover?
+							documentErrors.add(currentLineNumber, e);
+						}
 					}
 				}
 
@@ -125,6 +146,10 @@ public class Parser {
 			appendThisLine();
 		}
 
+		if (documentErrors.hasErrors()) {
+			throw documentErrors;
+		}
+		
 		return ast;
 	}
 
@@ -140,12 +165,24 @@ public class Parser {
 	}
 
 	/**
+	 * Eats characters up to a closing brace or the end of the line.  This method
+	 * is used only as an attempt to recover the parser.
+	 * <P>
+	 * The position is left on the closing brace or the newline character.
+	 */
+	private void eatToCloseBracesOrEndOfLine() {
+		while (query.charAt(i) != ')' && query.charAt(i) != '\n') {
+			i++;
+		}
+	}
+
+	/**
 	 * Parses an expression list, being expressions inside
 	 * brackets.
 	 * 
 	 * @return
 	 */
-	private List<SubExpression> parseExpression() {
+	private List<SubExpression> parseExpression() throws TxrErrorOnLineException {
 		List<SubExpression> result = new ArrayList<>();
 
 		while (query.charAt(i) == ' ' || query.charAt(i) == '\n') i++;
@@ -185,7 +222,11 @@ public class Parser {
 					subExpression = parseBinaryLiteral();
 					break;
 				default:
-					throw new RuntimeException("invalid subexpression");
+					// As a best attempt at recovering the parser, move on to the next ')'
+					// or to the end of the line.
+					eatToCloseBracesOrEndOfLine();
+					
+					throw new TxrErrorOnLineException(i, "Invalid subexpression. The character '" + c2 + " is not a valid character to follow #.");
 				}
 				break;
 
@@ -250,8 +291,9 @@ public class Parser {
 	 * double quote.
 	 * 
 	 * @return
+	 * @throws TxrErrorOnLineException 
 	 */
-	private SubExpression parseStringLiteral() {
+	private SubExpression parseStringLiteral() throws TxrErrorOnLineException {
 		StringBuffer result = new StringBuffer();
 
 		int start = i;
@@ -328,7 +370,7 @@ public class Parser {
 						}
 						start = i;
 					} else {
-						throw new RuntimeException("Backslash followed by invalid character.");
+						throw new TxrErrorOnLineException(start, i, "Backslash followed by invalid character.");
 					}
 				}
 			} else {
@@ -353,8 +395,9 @@ public class Parser {
 	 * not an octal digit.
 	 * 
 	 * @return
+	 * @throws TxrErrorOnLineException 
 	 */
-	private char parseOctalChar() {
+	private char parseOctalChar() throws TxrErrorOnLineException {
 		int start = i;
 		char c = query.charAt(i);
 		while (isOctalDigit(c)) {
@@ -363,7 +406,7 @@ public class Parser {
 		}
 		
 		if (i - start == 0) {
-			throw new RuntimeException("Octal digits expected.");
+			throw new TxrErrorOnLineException(start-2, start+1, "Octal digits expected.");
 		}
 
 		String octalAsString = query.substring(start, i);
@@ -480,7 +523,7 @@ public class Parser {
 				|| (c >= 'a' && c <= 'f');
 	}
 
-	private SubExpression parseCharacterLiteral() {
+	private SubExpression parseCharacterLiteral() throws TxrErrorOnLineException {
 		int start = i;
 
 		char c = query.charAt(i);
@@ -581,9 +624,12 @@ public class Parser {
 	 * 
 	 * @return an implementation of SubExpression that represents the
 	 * 			regular expression
+	 * @throws TxrErrorOnLineException 
 	 */
-	private RegularExpression parseRegularExpression(char terminatingChar) {
+	private RegularExpression parseRegularExpression(char terminatingChar) throws TxrErrorOnLineException {
 		List<RegexMatcher> regexMatchers = new ArrayList<>();
+		
+		int startForErrorPurposes = i - 1;
 		
 		char c = query.charAt(i);
 		i++;
@@ -695,7 +741,7 @@ public class Parser {
 		} while (c != terminatingChar && i < query.length());
 		
 		if (c != terminatingChar) {
-			throw new RuntimeException("Regex not terminated on same line");
+			throw new TxrErrorOnLineException(startForErrorPurposes, i, "Regex not terminated on same line.  The terminating character of '" + terminatingChar + " is expected before the end of the line.");
 		}
 		
 		return new RegularExpression(regexMatchers);
@@ -874,7 +920,7 @@ public class Parser {
 	 * 
 	 * @return
 	 */
-	private SubExpression parseLidentOrNumber() {
+	private SubExpression parseLidentOrNumber() throws TxrErrorOnLineException {
 		// First attempt to parse as a number
 		// If that fails, see if it is a valid lident
 
@@ -931,7 +977,11 @@ public class Parser {
 			}
 
 			// It's a valid floating-point number
-			return new FloatingPointLiteral(query.substring(start, i));
+			try {
+				return new FloatingPointLiteral(query.substring(start, i));
+			} catch (TxrErrorException e) {
+				throw new TxrErrorOnLineException(start, i, e.getMessage());
+			}
 		} else if (c == 'e' || c == 'E') {
 			i++;
 			if (query.charAt(i) == '+') {
@@ -957,7 +1007,11 @@ public class Parser {
 				}
 
 				// It's a valid floating-point number
-				return new FloatingPointLiteral(query.substring(start, i));
+				try {
+					return new FloatingPointLiteral(query.substring(start, i));
+				} catch (TxrErrorException e) {
+					throw new TxrErrorOnLineException(start, i, e.getMessage());
+				}
 
 			} else {
 				// It looked like a floating-point number, but no digit
@@ -1000,7 +1054,7 @@ public class Parser {
 
 	}
 
-	private Ident parseSidentOrBident() {
+	private Ident parseSidentOrBident() throws TxrErrorOnLineException {
 		if (query.charAt(i) == '{') {
 			int start = i+1;
 
@@ -1038,7 +1092,7 @@ public class Parser {
 			c = query.charAt(i);
 			i++;
 			if (c != '}') {
-				throw new RuntimeException("Invalid character in bident: " + c);
+				throw new TxrErrorOnLineException(start-1, i-1, "Invalid character in bident: " + c);
 			}
 			
 			return result;

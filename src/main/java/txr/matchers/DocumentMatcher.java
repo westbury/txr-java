@@ -12,6 +12,7 @@ import txr.parser.Line;
 import txr.parser.Parser;
 import txr.parser.SubExpression;
 import txr.parser.Symbol;
+import txr.parser.TxrErrorInDocumentException;
 
 public class DocumentMatcher {
 
@@ -21,13 +22,14 @@ public class DocumentMatcher {
 	 * 
 	 * @param txrInputStream an input stream containing TXR source
 	 * @param charsetName the encoding type used to convert bytes from the stream into characters
+	 * @throws TxrErrorInDocumentException 
 	 * @throws IllegalArgumentException if the specified character set does not exist
 	 */
-	public DocumentMatcher(InputStream txrInputStream, String charsetName) {
+	public DocumentMatcher(InputStream txrInputStream, String charsetName) throws TxrErrorInDocumentException {
 		this(buildAst(txrInputStream, charsetName));
 	}
 	
-	private static AST buildAst(InputStream txrInputStream, String charsetName) {
+	private static AST buildAst(InputStream txrInputStream, String charsetName) throws TxrErrorInDocumentException {
 		StringBuilder result = new StringBuilder("");
 
 		try (Scanner scanner = new Scanner(txrInputStream, charsetName)) {

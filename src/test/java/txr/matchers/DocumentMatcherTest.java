@@ -13,6 +13,7 @@ import org.junit.Test;
 
 import txr.parser.AST;
 import txr.parser.Parser;
+import txr.parser.TxrErrorInDocumentException;
 
 /**
  * @author Nigel
@@ -42,7 +43,7 @@ public class DocumentMatcherTest {
 	}
 
 	@Test
-	public void SimpleTest() {
+	public void SimpleTest() throws TxrErrorInDocumentException {
 		Parser p = new Parser();
 		AST ast = p.parse("Match this\nvalue = @x\nMatch this @@ nine");
 		assertEquals("[[Text: *Match this*], [Text: *value = *, Ident: x], [Text: *Match this @ nine*]]", ast.toString());
@@ -61,7 +62,7 @@ public class DocumentMatcherTest {
 	}
 
 	@Test
-	public void CollectTest() {
+	public void CollectTest() throws TxrErrorInDocumentException {
 		Parser p = new Parser();
 		AST ast = p.parse("Introduction\n"
 				+ "\n"
@@ -104,7 +105,7 @@ public class DocumentMatcherTest {
 	}
 
 	@Test
-	public void CasesTest() {
+	public void CasesTest() throws TxrErrorInDocumentException {
 		Parser p = new Parser();
 		AST ast = p.parse("Introduction\n"
 				+ "\n"
@@ -135,7 +136,7 @@ public class DocumentMatcherTest {
 	}
 
 	@Test
-	public void MaybeWithMultipleMatchesTest() {
+	public void MaybeWithMultipleMatchesTest() throws TxrErrorInDocumentException {
 		Parser p = new Parser();
 		AST ast = p.parse("Introduction\n"
 				+ "@(maybe)\n"
@@ -164,7 +165,7 @@ public class DocumentMatcherTest {
 	}
 
 	@Test
-	public void WhitespaceTest() {
+	public void WhitespaceTest() throws TxrErrorInDocumentException {
 		Parser p = new Parser();
 		AST ast = p.parse("Match this\nvalue = @x\nMatch this @@ nine");
 		assertEquals("[[Text: *Match this*], [Text: *value = *, Ident: x], [Text: *Match this @ nine*]]", ast.toString());
@@ -185,9 +186,10 @@ public class DocumentMatcherTest {
 	/**
 	 * Tests that the @(assert) context does not require each match
 	 * within an inner @(skip) to match.
+	 * @throws TxrErrorInDocumentException 
 	 */
 	@Test
-	public void SkipTest() {
+	public void SkipTest() throws TxrErrorInDocumentException {
 		Parser p = new Parser();
 		AST ast = p.parse(
 	"@(skip)\n" +
@@ -213,7 +215,7 @@ public class DocumentMatcherTest {
 	}
 
 	@Test
-	public void RegularExpressionTest() {
+	public void RegularExpressionTest() throws TxrErrorInDocumentException {
 		Parser p = new Parser();
 		AST ast = p.parse("@{transactiondate /\\d\\d [A-Z]+/} @{entereddate /\\d\\d [A-Z]+/} @description @{amount /\\d+\\.\\d\\d( CR)?/}");
 
@@ -231,7 +233,7 @@ public class DocumentMatcherTest {
 	}
 
 	@Test
-	public void Section_6_13_RegexTest1() {
+	public void Section_6_13_RegexTest1() throws TxrErrorInDocumentException {
 		Parser p = new Parser();
 		AST ast = p.parse("@{amount /(\\d+,)?\\d+\\.\\d\\d/}");
 
@@ -245,7 +247,7 @@ public class DocumentMatcherTest {
 	}
 
 	@Test
-	public void Section_6_13_RegexTest2() {
+	public void Section_6_13_RegexTest2() throws TxrErrorInDocumentException {
 		Parser p = new Parser();
 		AST ast = p.parse("@{amount /[\\dA-Z]+/}");
 
