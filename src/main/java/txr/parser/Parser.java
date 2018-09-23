@@ -689,8 +689,12 @@ public class Parser {
 					charMatcher = ch -> ch == '[';
 					break;
 					
+				case '-':
+					charMatcher = ch -> ch == '-';
+					break;
+					
 				default:
-					throw new UnsupportedOperationException();
+					throw new UnsupportedOperationException("Character '" + c2 + "' cannot be escaped here.");
 				}
 				regexMatchers.add(new SingleCharMatcher(charMatcher));
 				break;
