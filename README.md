@@ -1,6 +1,8 @@
 # txr-java
 An implementation of the TXR text matching language as a library for the JVM
 
+[![Gitpod - code now](https://img.shields.io/badge/Gitpod-code%20now-blue.svg?longCache=true)](https://gitpod.io#https://github.com/westbury/txr-java)
+
 TXR is a powerful language for extracting data from text documents.  It can be thought of as a pattern matcher but
 it operates at a file level.  For example if you want to extract order information
 from a confirmation e-mail sent to you by an online retailer then TXR is the tool for the job.  The documentation
