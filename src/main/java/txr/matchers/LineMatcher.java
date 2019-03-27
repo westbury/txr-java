@@ -21,9 +21,13 @@ import txr.parser.TextNode;
  */
 public class LineMatcher extends Matcher {
 
+	TxrOptions options;
+	
 	private List<HorizontalMatcher> matchers = new ArrayList<>();
 	
-	public LineMatcher(DocumentMatcher docMatcher, Line line) {
+	public LineMatcher(DocumentMatcher docMatcher, Line line, TxrOptions options) {
+		this.options = docMatcher.options;
+		
 		int i = 0;
 		while (i < line.nodes.size()) {
 			Node node = line.nodes.get(i);
@@ -80,7 +84,7 @@ public class LineMatcher extends Matcher {
 
 	private HorizontalMatcher getMatcherFromNode(Node node) {
 		if (node instanceof TextNode) {
-			return new TextMatcher((TextNode)node);
+			return new TextMatcher((TextNode)node, this.options.tabsAlsoMatchSingleSpace);
 		} else if (node instanceof Ident) {
 			Ident identNode = (Ident)node;
 			if (identNode.regex == null) {
@@ -133,6 +137,7 @@ public class LineMatcher extends Matcher {
 		return true;
 	}
 
+	@Override
 	public String toString() {
 		return "Match on line: " + matchers.toString();
 	}

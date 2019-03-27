@@ -31,9 +31,6 @@ public class VariableMatcher extends HorizontalMatcher {
 			do {
 				int j = reader.getCurrent();
 
-if (j == 48) {
-	System.out.println("here");
-}
 				if (followingMatcher.match(reader, bindings)) {
 					// We're done.  We have a match
 
@@ -74,6 +71,7 @@ if (j == 48) {
 		}
 	}
 
+	@Override
 	public String toString() {
 		return "{Variable: " + variableNode + ", Following: " + followingMatcher + "}";
 	}

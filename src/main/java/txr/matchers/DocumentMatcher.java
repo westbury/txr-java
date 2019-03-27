@@ -16,6 +16,8 @@ import txr.parser.TxrErrorInDocumentException;
 
 public class DocumentMatcher {
 
+	public TxrOptions options;
+
 	private MatchSequence topLevelMatcher = new MatchSequence();
 
 	/**
@@ -25,8 +27,9 @@ public class DocumentMatcher {
 	 * @throws TxrErrorInDocumentException 
 	 * @throws IllegalArgumentException if the specified character set does not exist
 	 */
-	public DocumentMatcher(InputStream txrInputStream, String charsetName) throws TxrErrorInDocumentException {
-		this(buildAst(txrInputStream, charsetName));
+	public DocumentMatcher(InputStream txrInputStream, String charsetName, TxrOptions options) throws TxrErrorInDocumentException {
+		this(buildAst(txrInputStream, charsetName), null);
+		this.options = options == null ? new TxrOptions() : options;
 	}
 	
 	private static AST buildAst(InputStream txrInputStream, String charsetName) throws TxrErrorInDocumentException {
@@ -46,7 +49,12 @@ public class DocumentMatcher {
 	}
 
 	public DocumentMatcher(AST ast) {
-
+		this(ast, null);
+	}
+	
+	public DocumentMatcher(AST ast, TxrOptions options) {
+		this.options = options != null ? options : new TxrOptions();
+		
 		int lineIndex = 0;
 
 		Stack<VerticalMatcher> processorStack = new Stack<>();
@@ -152,7 +160,7 @@ public class DocumentMatcher {
 				}
 			} else {
 				// Not a vertical directive
-				Matcher lineMatcher = new LineMatcher(this, line);
+				Matcher lineMatcher = new LineMatcher(this, line, this.options);
 				processor.addNextMatcherInMatchSequence(lineMatcher);
 			}
 
@@ -193,6 +201,7 @@ public class DocumentMatcher {
 		return process(inputTextArray);
 	}
 
+	@Override
 	public String toString() {
 		return topLevelMatcher.toString();
 	}

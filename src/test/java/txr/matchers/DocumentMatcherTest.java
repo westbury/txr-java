@@ -260,5 +260,18 @@ public class DocumentMatcherTest {
 		assertNotNull(matched);
 	}
 
+	@Test
+	public void Section_6_13_RegexTest3() throws TxrErrorInDocumentException {
+		Parser p = new Parser();
+		AST ast = p.parse("@{currency /\\w\\w\\w/} @{amount /[\\d,.]+/} @{balance /[\\d,.]+/}");
+
+		DocumentMatcher m = new DocumentMatcher(ast);
+
+		String [] inputText = new String [] {
+				"CAD  2,860.13  3,910.13"
+		};
+		MatchResults matched = m.process(inputText);
+		assertNotNull(matched);
+	}
 
 }
