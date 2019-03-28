@@ -30,7 +30,7 @@ public class TextMatcher extends HorizontalMatcher {
 		
 		int start = i;
 		while (i < node.text.length()) {
-			while (i < node.text.length() && node.text.charAt(1) != ' ') {
+			while (i < node.text.length() && node.text.charAt(i) != ' ') {
 				i++;
 			}
 			
@@ -76,8 +76,6 @@ public class TextMatcher extends HorizontalMatcher {
 		 */
 
 		int start = reader.getCurrent();
-		
-		int j = 0;
 		
 		if (this.startWithWhitespace) {
 			if (!isMatchedBySingleSpace(reader.fetchChar())) {

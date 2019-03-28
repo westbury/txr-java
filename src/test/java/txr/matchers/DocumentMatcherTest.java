@@ -5,6 +5,7 @@ package txr.matchers;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 import org.junit.After;
 import org.junit.Before;
@@ -261,7 +262,50 @@ public class DocumentMatcherTest {
 	}
 
 	@Test
-	public void Section_6_13_RegexTest3() throws TxrErrorInDocumentException {
+	public void Section_6_13_WhitespaceTest1() throws TxrErrorInDocumentException {
+		Parser p = new Parser();
+		AST ast = p.parse("foo bar  baz");
+
+		DocumentMatcher m = new DocumentMatcher(ast);
+
+		MatchResults matched1 = m.process("foo    bar  baz");
+		assertNotNull(matched1);
+
+		MatchResults matched2 = m.process("foo    bar  baz ");
+		assertNull(matched2);
+
+		MatchResults matched3 = m.process(" foo    bar  baz");
+		assertNull(matched3);
+
+		MatchResults matched4 = m.process("foobar  baz");
+		assertNull(matched4);
+
+		MatchResults matched5 = m.process("foo\tbar  baz");
+		assertNull(matched5);
+
+		MatchResults matched6 = m.process("foo  bar    baz");
+		assertNull(matched6);
+	}
+
+	@Test
+	public void Section_6_13_WhitespaceTest2() throws TxrErrorInDocumentException {
+		Parser p = new Parser();
+		AST ast = p.parse(" foo bar  baz ");
+
+		DocumentMatcher m = new DocumentMatcher(ast);
+
+		MatchResults matched1 = m.process(" foo    bar  baz");
+		assertNull(matched1);
+
+		MatchResults matched2 = m.process("foo    bar  baz");
+		assertNull(matched2);
+
+		MatchResults matched3 = m.process("   foo    bar  baz   ");
+		assertNotNull(matched3);
+	}
+
+	@Test
+	public void Section_6_13_RegexTest10() throws TxrErrorInDocumentException {
 		Parser p = new Parser();
 		AST ast = p.parse("@{currency /\\w\\w\\w/} @{amount /[\\d,.]+/} @{balance /[\\d,.]+/}");
 
