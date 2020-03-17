@@ -1,3 +1,5 @@
+[![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-Ready--to--Code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/westbury/txr-java) 
+
 # txr-java
 An implementation of the TXR text matching language as a library for the JVM
 
