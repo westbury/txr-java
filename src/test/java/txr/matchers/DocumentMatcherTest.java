@@ -318,7 +318,20 @@ public class DocumentMatcherTest {
 		assertNotNull(matched);
 	}
 
-	
+	@Test
+	public void regex_alternative_text() throws TxrErrorInDocumentException {
+		Parser p = new Parser();
+		AST ast = p.parse("@{cardtype /Visa|Master Card/}");
+
+		DocumentMatcher m = new DocumentMatcher(ast);
+
+		String [] inputText = new String [] {
+				"Master Card"
+		};
+		MatchResults matched = m.process(inputText);
+		assertNotNull(matched);
+	}
+
 	@Test
 	public void Ebay_detail_problem() throws TxrErrorInDocumentException {
 		Parser p = new Parser();
@@ -327,7 +340,7 @@ public class DocumentMatcherTest {
 		DocumentMatcher m = new DocumentMatcher(ast);
 
 		String [] inputText = new String [] {
-				"Ending in 1012Master Card credit card ending in 1012"
+				"Ending in 1082Master Card credit card ending in 1082"
 		};
 		MatchResults matched = m.process(inputText);
 		assertNotNull(matched);

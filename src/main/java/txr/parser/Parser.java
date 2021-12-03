@@ -1,6 +1,7 @@
 package txr.parser;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import txr.matchers.CharsFromInputLineReader;
@@ -621,6 +622,9 @@ public class Parser {
 	 * at the first character after the '/', being the first
 	 * character of the regular expression.  On exit, i will be
 	 * positioned at the first character after the terminating '/'.
+	 * <P>
+	 * This method is also called recursively when stuff in in brackets ( and ).
+	 * Hence why we have parameter terminatingChar.
 	 * 
 	 * @return an implementation of SubExpression that represents the
 	 * 			regular expression
@@ -628,6 +632,7 @@ public class Parser {
 	 */
 	private RegularExpression parseRegularExpression(char terminatingChar) throws TxrErrorOnLineException {
 		List<RegexMatcher> regexMatchers = new ArrayList<>();
+		List<RegularExpression> alternatives = new ArrayList<>();
 		
 		int startForErrorPurposes = i - 1;
 		
@@ -693,6 +698,18 @@ public class Parser {
 					charMatcher = ch -> ch == '-';
 					break;
 					
+				case '(':
+					charMatcher = ch -> ch == '(';
+					break;
+					
+				case ')':
+					charMatcher = ch -> ch == ')';
+					break;
+					
+				case '|':
+					charMatcher = ch -> ch == '|';
+					break;
+					
 				default:
 					throw new UnsupportedOperationException("Character '" + c2 + "' cannot be escaped here.");
 				}
@@ -732,7 +749,13 @@ public class Parser {
 					}
 				});
 				break;
-				
+
+			case '|':
+				RegularExpression subExpression1 = new RegularExpression(regexMatchers);
+				alternatives.add(subExpression1);
+				regexMatchers = new ArrayList<>();
+				break;
+
 			default:
 				// Anything else, it must be an exact match
 				charMatcher = ch -> ch == c1;
@@ -747,8 +770,29 @@ public class Parser {
 		if (c != terminatingChar) {
 			throw new TxrErrorOnLineException(startForErrorPurposes, i, "Regex not terminated on same line.  The terminating character of '" + terminatingChar + " is expected before the end of the line.");
 		}
-		
-		return new RegularExpression(regexMatchers);
+
+		if (alternatives.isEmpty()) {
+			return new RegularExpression(regexMatchers);
+		} else {
+			RegularExpression subExpression1 = new RegularExpression(regexMatchers);
+			alternatives.add(subExpression1);
+			
+			return new RegularExpression(
+				Collections.singletonList(
+				    new RegexMatcher() {
+						@Override
+						public boolean match(CharsFromInputLineReader reader) {
+							for (RegularExpression alternative : alternatives) {
+								if (alternative.match(reader)) {
+									return true;
+								};
+							}
+							return false;
+						}
+					}
+				)
+			);
+		}
 	}
 
 	/**
