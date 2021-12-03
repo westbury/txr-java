@@ -3,14 +3,14 @@
  */
 package txr.matchers;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import txr.parser.AST;
 import txr.parser.Parser;
@@ -25,21 +25,21 @@ public class DocumentMatcherTest {
 	/**
 	 * @throws java.lang.Exception
 	 */
-	@BeforeClass
+	@BeforeAll
 	public static void setUpBeforeClass() throws Exception {
 	}
 
 	/**
 	 * @throws java.lang.Exception
 	 */
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 	}
 
 	/**
 	 * @throws java.lang.Exception
 	 */
-	@After
+	@AfterEach
 	public void tearDown() throws Exception {
 	}
 
@@ -313,6 +313,21 @@ public class DocumentMatcherTest {
 
 		String [] inputText = new String [] {
 				"CAD  2,860.13  3,910.13"
+		};
+		MatchResults matched = m.process(inputText);
+		assertNotNull(matched);
+	}
+
+	
+	@Test
+	public void Ebay_detail_problem() throws TxrErrorInDocumentException {
+		Parser p = new Parser();
+		AST ast = p.parse("Ending in @{lastfourdigits}@{cardtype /Visa|Master Card/} credit card ending in @{lastfourdigits}");
+
+		DocumentMatcher m = new DocumentMatcher(ast);
+
+		String [] inputText = new String [] {
+				"Ending in 1012Master Card credit card ending in 1012"
 		};
 		MatchResults matched = m.process(inputText);
 		assertNotNull(matched);

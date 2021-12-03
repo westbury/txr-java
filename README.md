@@ -22,8 +22,8 @@ To checkout code and build:
 
     git clone https://github.com/westbury/txr-java
     cd txr-java        
-    ./gradlew installApp         (on Linux / Mac OS)
-    gradlew installApp           (on Windows)
+    ./gradlew jar         (on Linux / Mac OS)
+    gradlew jar           (on Windows)
     
     To use Eclipse for developing txr-java, first build the Eclipse project files
     (.project etc):

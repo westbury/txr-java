@@ -3,18 +3,25 @@
  */
 package txr.parser;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.List;
 import java.util.Scanner;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import txr.matchers.DocumentMatcher;
 import txr.matchers.MatchResults;
@@ -29,21 +36,21 @@ public class ParserTest {
 	/**
 	 * @throws java.lang.Exception
 	 */
-	@BeforeClass
+	@BeforeAll
 	public static void setUpBeforeClass() throws Exception {
 	}
 
 	/**
 	 * @throws java.lang.Exception
 	 */
-	@Before
+	@BeforeEach
 	public void setUp() throws Exception {
 	}
 
 	/**
 	 * @throws java.lang.Exception
 	 */
-	@After
+	@AfterEach
 	public void tearDown() throws Exception {
 	}
 
@@ -61,13 +68,16 @@ public class ParserTest {
 		assertEquals("[[[Symbol: collect, Symbol: :maxgap, Integer: 12, Symbol: :mingap, Integer: 5]]]", ast.toString());
 	}
 
-	@Test (expected = TxrException.class)
+	@Test
 	public void Section_6_12_KeywordWithInvalidFollowingWhitespaceTest() throws TxrErrorInDocumentException {
 		Parser p = new Parser();
 		AST ast = p.parse("@(collect :maxgap 12 :mingap 5)  \n@line\n@(end)");
 		assertEquals("[[[Symbol: collect, Symbol: :maxgap, Integer: 12, Symbol: :mingap, Integer: 5], Text: *  *], [Ident: line], [[Symbol: end]]]", ast.toString());
 
-		new DocumentMatcher(ast);
+		TxrException exception = assertThrows(TxrException.class, () -> {
+			new DocumentMatcher(ast);
+	    });
+	    assertTrue(exception.getMessage().contains("expected something"));
 	}
 
 	@Test
@@ -134,28 +144,40 @@ public class ParserTest {
 		assertEquals("[[[Symbol: 123E]]]", ast.toString());
 	}
 
-	@Test (expected = RuntimeException.class)
+	@Test
 	public void Section_6_20_BadFloatingPoint2() throws TxrErrorInDocumentException {
 		Parser p = new Parser();
-		p.parse("@(1.0E-)");
+		RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+			p.parse("@(1.0E-)");
+	    });
+	    assertTrue(exception.getMessage().contains("Invalid floating-point constant"));
 	}
 
-	@Test (expected = RuntimeException.class)
+	@Test
 	public void Section_6_20_BadFloatingPoint3() throws TxrErrorInDocumentException {
 		Parser p = new Parser();
-		p.parse("@(1.0E)");
+		RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+			p.parse("@(1.0E)");
+	    });
+	    assertTrue(exception.getMessage().contains("Invalid floating-point constant"));
 	}
 
-	@Test (expected = RuntimeException.class)
+	@Test
 	public void Section_6_20_BadFloatingPoint4() throws TxrErrorInDocumentException {
 		Parser p = new Parser();
-		p.parse("@(1.E)");
+		RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+			p.parse("@(1.E)");
+	    });
+	    assertTrue(exception.getMessage().contains("Invalid floating-point constant"));
 	}
 
-	@Test (expected = RuntimeException.class)
+	@Test
 	public void Section_6_20_BadFloatingPoint5() throws TxrErrorInDocumentException {
 		Parser p = new Parser();
-		p.parse("@(.e)");
+		RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+			p.parse("@(.e)");
+	    });
+	    assertTrue(exception.getMessage().contains("a '.' appears, but no digits before or after it so not a valid floating-point number"));
 	}
 
 	@Test
@@ -218,4 +240,40 @@ public class ParserTest {
 		AST ast = p.parse(result.toString());
 		assertEquals("[[[Symbol: foo, Symbol: bar]]]", ast.toString());
 	}
+
+	@Test
+	public void AquacardTest() throws IOException, URISyntaxException, TxrErrorInDocumentException {
+		DocumentMatcher matcher = createMatcherFromResource("aqua.txr");
+
+		ClassLoader classLoader = getClass().getClassLoader();
+		URL resource = classLoader.getResource("aqua.txt");
+		List<String> lines = Files.readAllLines(Paths.get(resource.toURI()), StandardCharsets.UTF_8);
+		MatchResults results = matcher.process(lines.toArray(new String[0]));
+		
+		assertEquals(9, results.getCollections(0).size());
+	}
+	
+	@Test
+	public void JMFinnCashTest() throws IOException, URISyntaxException, TxrErrorInDocumentException {
+		DocumentMatcher matcher = createMatcherFromResource("jmfinn-cash-statement.txr");
+
+		ClassLoader classLoader = getClass().getClassLoader();
+		URL resource = classLoader.getResource("jmfinn-cash-statement.txt");
+		List<String> lines = Files.readAllLines(Paths.get(resource.toURI()), StandardCharsets.UTF_8);
+		MatchResults results = matcher.process(lines.toArray(new String[0]));
+		
+		assertEquals(9, results.getCollections(0).size());
+	}
+	
+	private DocumentMatcher createMatcherFromResource(String resourceName) throws TxrErrorInDocumentException {
+		ClassLoader classLoader = getClass().getClassLoader();
+		URL resource = classLoader.getResource(resourceName);
+		try (InputStream txrInputStream = resource.openStream()) {
+			return new DocumentMatcher(txrInputStream, "UTF-8", null);
+		} catch (IOException e) {
+			e.printStackTrace();
+			throw new RuntimeException(e);
+		}
+	}
+
 }
