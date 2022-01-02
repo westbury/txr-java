@@ -34,7 +34,7 @@ public class MatchSequence extends VerticalMatcher {
 	}
 
 	@Override
-	public boolean match(LinesFromInputReader reader, MatchContext context) {
+	public MatcherResult match(LinesFromInputReader reader, MatchContext context) {
 		int start = reader.getCurrent();
 		
 		/*
@@ -44,18 +44,25 @@ public class MatchSequence extends VerticalMatcher {
 		MatchResultsWithPending subBindings = new MatchResultsWithPending(context.bindings);
 		MatchContext subContext = new MatchContext(subBindings, context.assertContext);
 		
+		List<MatcherResultSuccess> successfulMatches = new ArrayList<>();
+		
 		for (Matcher matcher : sequence) {
-			boolean matches = matcher.match(reader, subContext);
-			if (!matches) {
+			int line = reader.getCurrent();
+			
+			MatcherResult matches = matcher.match(reader, subContext);
+			if (!matches.isSuccess()) {
 				// This check needs to be done here so the user sees the actual line that failed.
 				context.assertContext.checkMatchFailureIsOk(reader.getCurrent(), matcher);
 				reader.setCurrent(start);
-				return false;
+				return new MatcherResult(new MatcherResultSequenceFailed(successfulMatches, matches.getFailedResult()));
 			}
+			
+			// It matches, so add this to our line matching list for debugging
+			successfulMatches.add(matches.getSuccessfulResult());
 		}
 		
 		subBindings.commitPendingBindings();
-		return true;
+		return new MatcherResult(new MatcherResultSequenceSuccess(successfulMatches));
 	}
 
 	public String toString() {

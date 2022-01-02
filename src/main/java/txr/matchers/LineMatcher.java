@@ -24,9 +24,13 @@ public class LineMatcher extends Matcher {
 	TxrOptions options;
 	
 	private List<HorizontalMatcher> matchers = new ArrayList<>();
+
+	private int txrLineNumber;
 	
-	public LineMatcher(DocumentMatcher docMatcher, Line line, TxrOptions options) {
+	// Should txrLineNumber and line be a single parameter???
+	public LineMatcher(DocumentMatcher docMatcher, int txrLineNumber, Line line, TxrOptions options) {
 		this.options = docMatcher.options;
+		this.txrLineNumber = txrLineNumber;
 		
 		int i = 0;
 		while (i < line.nodes.size()) {
@@ -108,9 +112,9 @@ public class LineMatcher extends Matcher {
 	}
 
 	@Override
-	public boolean match(LinesFromInputReader documentReader, MatchContext context) {
+	public MatcherResult match(LinesFromInputReader documentReader, MatchContext context) {
 		if (documentReader.isEndOfFile()) {
-			return false;
+			return new MatcherResult(new MatcherResultLineFailure(txrLineNumber, documentReader.getCurrent(), "This line cannot match because there are no more input lines."));
 		}
 		
 		int start = documentReader.getCurrent();
@@ -122,7 +126,7 @@ public class LineMatcher extends Matcher {
 				if (!matcher.match(reader, context.bindings)) {
 					// Line cannot match
 					documentReader.setCurrent(start);
-					return false;
+					return new MatcherResult(new MatcherResultLineFailure(txrLineNumber, start, "Line does not match: " + matcher.toString()));
 				}
 			
 			i++;
@@ -131,10 +135,10 @@ public class LineMatcher extends Matcher {
 		if (!reader.isEndOfLine()) {
 			// There is unmatched stuff at the end of the line
 			documentReader.setCurrent(start);
-			return false;
+			return new MatcherResult(new MatcherResultLineFailure(txrLineNumber, reader.getCurrent(), "There is extra unmatched stuff at the end of the line,"));
 		}
 		
-		return true;
+		return new MatcherResult(new MatcherResultLineSuccess(txrLineNumber, start));
 	}
 
 	@Override

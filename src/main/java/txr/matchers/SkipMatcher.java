@@ -53,7 +53,7 @@ public class SkipMatcher extends VerticalMatcher {
 	}
 
 	@Override
-	public boolean match(LinesFromInputReader reader, MatchContext context) {
+	public MatcherResult match(LinesFromInputReader reader, MatchContext context) {
 		/*
 		 * The context passed to us may require a match due to an @(assert).
 		 * We don't pass on this context because the sub-matches below
@@ -62,8 +62,8 @@ public class SkipMatcher extends VerticalMatcher {
 		 */
 		MatchContext subContext = new MatchContext(context.bindings);
 		
-		boolean matches = content.match(reader, subContext);
-		while (!matches && !reader.isEndOfFile()) {
+		MatcherResult matches = content.match(reader, subContext);
+		while (!matches.isSuccess() && !reader.isEndOfFile()) {
 			reader.fetchLine();
 			matches = content.match(reader, subContext);
 		}

@@ -1,5 +1,8 @@
 package txr.matchers;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import txr.parser.Expr;
 
 public class MaybeMatcher extends ParallelMatcher {
@@ -16,14 +19,16 @@ public class MaybeMatcher extends ParallelMatcher {
 	}
 	
 	@Override
-	public boolean match(LinesFromInputReader reader, MatchContext context) {
+	public MatcherResult match(LinesFromInputReader reader, MatchContext context) {
 		int start = reader.getCurrent();
 		int longest = start;
+		List<MatcherResult> allMatcherResults = new ArrayList<>();
 		
 		for (MatchSequence eachMatchSequence : content) {
 			MatchContext subContext = new MatchContext(context.bindings);
 			
-			if (eachMatchSequence.match(reader, subContext)) {
+			MatcherResult eachMatcherResult = eachMatchSequence.match(reader, subContext);
+			if (eachMatcherResult.isSuccess()) {
 				
 				int endOfThisMatch = reader.getCurrent();
 				if (endOfThisMatch > longest) {
@@ -41,11 +46,13 @@ public class MaybeMatcher extends ParallelMatcher {
 				 */
 				subContext.assertContext.checkMatchFailureIsOk(reader.getCurrent(), eachMatchSequence);
 			}
+			
+			allMatcherResults.add(eachMatcherResult);
 		}
 
 		reader.setCurrent(longest);
 		
-		return true;
+		return new MatcherResult(new MatcherResultMaybe(reader.getCurrent(), allMatcherResults));
 	}
 
 }

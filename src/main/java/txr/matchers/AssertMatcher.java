@@ -47,7 +47,7 @@ public class AssertMatcher extends VerticalMatcher {
 	}
 	
 	@Override
-	public boolean match(LinesFromInputReader reader, MatchContext context) {
+	public MatcherResult match(LinesFromInputReader reader, MatchContext context) {
 		/*
 		 * An 'assert' directive will always match.  However we mark the bindings
 		 * to indicate that it is an error if the bindings are to be discarded due
@@ -55,7 +55,7 @@ public class AssertMatcher extends VerticalMatcher {
 		 */
 		context.assertContext.setMatchObligatory(reader.getCurrent());
 		
-		return true;
+		return new MatcherResult(new MatcherResultAssert(reader.getCurrent()));
 	}
 
 	public String toString() {

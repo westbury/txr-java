@@ -16,7 +16,7 @@ public class CasesMatcher extends ParallelMatcher {
 	}
 	
 	@Override
-	public boolean match(LinesFromInputReader reader, MatchContext context) {
+	public MatcherResult match(LinesFromInputReader reader, MatchContext context) {
 		/*
 		 * Look for a match, going through the cases in order. As soon as one of
 		 * the cases matches, we are done. If none match, this matcher does not
@@ -25,8 +25,9 @@ public class CasesMatcher extends ParallelMatcher {
 		for (MatchSequence eachMatchSequence : content) {
 			MatchContext subContext = new MatchContext(context.bindings);
 			
-			if (eachMatchSequence.match(reader, subContext)) {
-				return true;
+			MatcherResult eachResult = eachMatchSequence.match(reader, subContext);
+			if (eachResult.isSuccess()) {
+				return new MatcherResult(new MatcherResultCaseSuccess(eachResult.getSuccessfulResult()));
 			} else {
 				/*
 				 * The sub-sequence did not match.  Check only that
@@ -38,7 +39,7 @@ public class CasesMatcher extends ParallelMatcher {
 			}
 		}
 		
-		return false;
+		return new MatcherResult(new MatcherResultCaseFailure(reader.getCurrent()));
 	}
 
 }

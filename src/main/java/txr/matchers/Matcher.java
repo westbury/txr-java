@@ -16,8 +16,10 @@ public abstract class Matcher {
 	 * 			a match if matched, or position unchanged if no match
 	 * @param bindings bindings are added here if a match, otherwise
 	 * 			if no match this object is not altered
-	 * @return true if match, false if no match starting at this line
+	 * @return if it matched, an object that showed how it matched,
+	 * 		if it did not match, an object that indicates the most successful
+	 * 		paths
 	 */
-	public abstract boolean match(LinesFromInputReader reader, MatchContext context);
+	public abstract MatcherResult match(LinesFromInputReader reader, MatchContext context);
 
 }

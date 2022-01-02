@@ -79,7 +79,7 @@ public class DocumentMatcherTest {
 		assertEquals("[[Text: *Introduction*], [], [[Symbol: collect]], [Text: *Title: *, Ident: description], [Text: *Amount: £*, Ident: amount], [], [[Symbol: until]], [Text: *Conclusion*], [[Symbol: end]], [Text: *Conclusion*], [Text: *Total: £*, Ident: delivery]]", ast.toString());
 
 		DocumentMatcher m = new DocumentMatcher(ast);
-		assertEquals("[Match on line: [Text: [*Introduction*]], Match on line: [], Collect body=[Match on line: [Text: [*Title: *], {Variable: Ident: description, Following: [EOL]}], Match on line: [Text: [*Amount: £*], {Variable: Ident: amount, Following: [EOL]}], Match on line: []] until=[Match on line: [Text: [*Conclusion*]]], Match on line: [Text: [*Conclusion*]], Match on line: [Text: [*Total: £*], {Variable: Ident: delivery, Following: [EOL]}]]", m.toString());
+		assertEquals("[Match on line: [Text: [*Introduction*]], Match on line: [], Collect body=[Match on line: [Text: [*Title:*], {Variable: Ident: description, Following: [EOL]}], Match on line: [Text: [*Amount:*, *£*], {Variable: Ident: amount, Following: [EOL]}], Match on line: []] until=[Match on line: [Text: [*Conclusion*]]], Match on line: [Text: [*Conclusion*]], Match on line: [Text: [*Total:*, *£*], {Variable: Ident: delivery, Following: [EOL]}]]", m.toString());
 
 		String [] inputText = new String [] {
 				"Introduction",
@@ -121,8 +121,7 @@ public class DocumentMatcherTest {
 		assertEquals("[[Text: *Introduction*], [], [[Symbol: cases]], [Text: *Case1: *, Ident: description], [[Symbol: or]], [Text: *Case2: *, Ident: description], [[Symbol: and]], [Text: *Case3: *, Ident: description], [[Symbol: end]], [Text: *Conclusion*]]", ast.toString());
 
 		DocumentMatcher m = new DocumentMatcher(ast);
-		assertEquals("[Match on line: [Text: [*Introduction*]], Match on line: [], Cases[[Match on line: [Text: [*Case1: *], {Variable: Ident: description, Following: [EOL]}]][Match on line: [Text: [*Case2: *], {Variable: Ident: description, Following: [EOL]}]], [Match on line: [Text: [*Case3: *], {Variable: Ident: description, Following: [EOL]}]], , Match on line: [Text: [*Conclusion*]]]", m.toString());
-
+		assertEquals("[Match on line: [Text: [*Introduction*]], Match on line: [], Cases[[Match on line: [Text: [*Case1:*], {Variable: Ident: description, Following: [EOL]}]][Match on line: [Text: [*Case2:*], {Variable: Ident: description, Following: [EOL]}]], [Match on line: [Text: [*Case3:*], {Variable: Ident: description, Following: [EOL]}]], ], Match on line: [Text: [*Conclusion*]]]", m.toString());
 		String [] inputText = new String [] {
 				"Introduction",
 				"",
@@ -131,9 +130,7 @@ public class DocumentMatcherTest {
 		};
 		MatchResults matched = m.process(inputText);
 		assertNotNull(matched);
-		assertEquals(1, matched.getCollections(0).size());
-		MatchResults bananaMatch = matched.getCollections(0).get(0);
-		assertEquals("Bananas", bananaMatch.getVariable("description").text);
+		assertEquals("Bananas", matched.getVariable("description").text);
 	}
 
 	@Test

@@ -47,7 +47,7 @@ public class ThrowMatcher extends VerticalMatcher {
 	}
 	
 	@Override
-	public boolean match(LinesFromInputReader reader, MatchContext context) {
+	public MatcherResult match(LinesFromInputReader reader, MatchContext context) {
 		// TODO make this a checked exception and be sure
 		// we are handling it correctly in all places.
 		

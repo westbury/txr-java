@@ -173,7 +173,7 @@ public class DocumentMatcher {
 				}
 			} else {
 				// Not a vertical directive
-				Matcher lineMatcher = new LineMatcher(this, line, this.options);
+				Matcher lineMatcher = new LineMatcher(this, lineIndex, line, this.options);
 				processor.addNextMatcherInMatchSequence(lineMatcher);
 			}
 
@@ -181,16 +181,44 @@ public class DocumentMatcher {
 		} while (lineIndex < ast.lineSequence.size());
 	}
 
+	public class MatchPair {
+		public MatcherResult matcherResults;
+		public MatchResults results;
+
+		public MatchPair(MatcherResult matcherResults, MatchResults results) {
+			this.matcherResults = matcherResults;
+			this.results = results;
+		}
+	}
 	public MatchResults process(String [] inputText) {
 		LinesFromInputReader reader = new LinesFromInputReader(inputText);
 		MatchResults results = new MatchResultsBase();
 		MatchContext context = new MatchContext(results);
 		
-		boolean matched = topLevelMatcher.match(reader, context);
+		MatcherResult matched = topLevelMatcher.match(reader, context);
 
 		// TODO check asserts
 		
-		return matched ? results : null;
+		// Can this be cleaned up a bit?  Perhaps bindings should be part
+		// of MatcherResult?
+		if (matched.isSuccess()) {
+			return results;
+		} else {
+			return null;
+		}
+	}
+	public MatchPair process2(String [] inputText) {
+		LinesFromInputReader reader = new LinesFromInputReader(inputText);
+		MatchResults results = new MatchResultsBase();
+		MatchContext context = new MatchContext(results);
+		
+		MatcherResult matched = topLevelMatcher.match(reader, context);
+
+		// TODO check asserts
+		
+		// Can this be cleaned up a bit?  Perhaps bindings should be part
+		// of MatcherResult?
+		return new MatchPair(matched, results);
 	}
 
 	/**

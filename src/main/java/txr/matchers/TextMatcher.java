@@ -137,6 +137,9 @@ public class TextMatcher extends HorizontalMatcher {
 			buffer.append(separator).append('*').append(word).append('*');
 			separator = ", ";
 		}
+		if (endWithText != null) {
+			buffer.append(separator).append('*').append(endWithText).append('*');
+		}
 		return buffer.append("]").toString();
 	}
 }

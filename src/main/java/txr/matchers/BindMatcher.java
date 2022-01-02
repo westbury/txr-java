@@ -47,7 +47,7 @@ public class BindMatcher extends VerticalMatcher {
 	}
 	
 	@Override
-	public boolean match(LinesFromInputReader reader, MatchContext context) {
+	public MatcherResult match(LinesFromInputReader reader, MatchContext context) {
 		// TODO implement this
 		
 		if (target instanceof Symbol && value instanceof StringLiteral) {
@@ -56,7 +56,7 @@ public class BindMatcher extends VerticalMatcher {
 			
 			context.bindings.getVariable(t.symbolText).text = v.value;
 		}
-		return true;
+		return new MatcherResult(new MatcherResultBind(reader.getCurrent()));
 	}
 
 	public String toString() {

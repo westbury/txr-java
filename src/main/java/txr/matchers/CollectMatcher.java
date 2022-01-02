@@ -97,8 +97,13 @@ public class CollectMatcher extends VerticalMatcher {
 	}
 	
 	@Override
-	public boolean match(LinesFromInputReader reader, MatchContext context) {
+	public MatcherResult match(LinesFromInputReader reader, MatchContext context) {
 		List<MatchResultsBase> nestedBindingsList = new ArrayList<>();
+
+		List<MatcherResultSuccess> bodyMatchers = new ArrayList<>();
+		MatcherResultSuccess untilMatch = null;
+		MatcherResultSuccess lastMatch = null;
+
 		int numberOfGapLines = 0;
 		int endOfLastMatch = reader.getCurrent();
 		do {
@@ -110,8 +115,10 @@ public class CollectMatcher extends VerticalMatcher {
 				MatchContext nestedContext = new MatchContext(nestedBindings);
 				
 				String temp = reader.toString();
-				if (until.match(reader, nestedContext)) {
+				MatcherResult untilMatcherResult = until.match(reader, nestedContext);
+				if (untilMatcherResult.isSuccess()) {
 					reader.setCurrent(start);
+					untilMatch = untilMatcherResult.getSuccessfulResult();
 					break;
 				} else {
 					/*
@@ -130,7 +137,8 @@ public class CollectMatcher extends VerticalMatcher {
 				MatchResultsWithPending nestedBindings = new MatchResultsWithPending(context.bindings);
 				MatchContext nestedContext = new MatchContext(nestedBindings);
 				
-				if (last.match(reader, nestedContext)) {
+				MatcherResult lastMatcherResult = last.match(reader, nestedContext);
+				if (lastMatcherResult.isSuccess()) {
 					nestedBindingsList.add(nestedBindings.extractPendingAsBase());
 					break;
 				} else {
@@ -150,8 +158,11 @@ public class CollectMatcher extends VerticalMatcher {
 			MatchResultsWithPending nestedBindings = new MatchResultsWithPending(context.bindings);
 			MatchContext nestedContext = new MatchContext(nestedBindings);
 			
-			if (body.match(reader, nestedContext)) {
+			MatcherResult bodyMatcherResult = body.match(reader, nestedContext);
+			if (bodyMatcherResult.isSuccess()) {
 				nestedBindingsList.add(nestedBindings.extractPendingAsBase());
+
+				bodyMatchers.add(bodyMatcherResult.getSuccessfulResult());
 				
 				if (maxtimes != null && nestedBindingsList.size() == maxtimes) {
 					break;
@@ -188,12 +199,13 @@ public class CollectMatcher extends VerticalMatcher {
 		
 		if (mintimes != null) {
 			if (nestedBindingsList.size() < mintimes) {
-				return false;
+				String message = "Collect has :mintimes set to " + mintimes + " but " + nestedBindingsList.size() + " matches were found.";
+				return new MatcherResult(new MatcherResultCollectFailure(message, bodyMatchers, lastMatch, untilMatch));
 			}
 		}
 
 		context.bindings.addList("collect", nestedBindingsList);
-		return true;
+		return new MatcherResult(new MatcherResultCollectSuccess(bodyMatchers, lastMatch, untilMatch));
 	}
 
 	public String toString() {
