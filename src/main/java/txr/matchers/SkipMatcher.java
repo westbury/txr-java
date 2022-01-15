@@ -9,6 +9,9 @@ import txr.parser.Symbol;
 
 public class SkipMatcher extends VerticalMatcher {
 
+	// Move to VerticalMatcher
+	private int txrLineNumber;
+	
 	/**
 	 * The maximum number of lines to check
 	 */
@@ -20,9 +23,11 @@ public class SkipMatcher extends VerticalMatcher {
 	private Long start;
 
 	private MatchSequence content = new MatchSequence();
-	
 
-	public SkipMatcher(Expr expr) {
+
+	public SkipMatcher(int txrLineNumber, Expr expr) {
+		this.txrLineNumber = txrLineNumber;
+		
 		Iterator<SubExpression> iter = expr.subExpressions.iterator();
 		
 		// The first is the name of the directive, so ignore that.
@@ -84,9 +89,14 @@ public class SkipMatcher extends VerticalMatcher {
 	}
 
 	@Override
-	public void addNextDirective(Expr directive) {
+	public void addNextDirective(int txrLineIndex, Expr directive) {
 		// There are no special directives allowed after a @(skip)
 		// that are not allowed in general.
 		throw new RuntimeException("Unknown directive @(" + directive + ") or unexpected at this location.");
+	}
+
+	@Override
+	public void setTxrEndLineIndex(int txrLineIndex) {
+		// We don't need to know the end here???
 	}
 }

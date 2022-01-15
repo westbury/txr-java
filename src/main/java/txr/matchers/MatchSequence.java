@@ -24,7 +24,7 @@ public class MatchSequence extends VerticalMatcher {
 	}
 
 	@Override
-	public void addNextDirective(Expr directive) {
+	public void addNextDirective(int txrLineIndex, Expr directive) {
 		/*
 		 * Directives such as @(COLLECT) are processed at the top level, and
 		 * directives specific to only certain blocks, such as @(UNTIL), are not
@@ -67,5 +67,11 @@ public class MatchSequence extends VerticalMatcher {
 
 	public String toString() {
 		return sequence.toString();
+	}
+
+	@Override
+	public void setTxrEndLineIndex(int txrLineIndex) {
+		// TODO Auto-generated method stub
+		// We don't need to know the end here?
 	}
 }

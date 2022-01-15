@@ -41,7 +41,7 @@ public class BindMatcher extends VerticalMatcher {
 	}
 
 	@Override
-	public void addNextDirective(Expr expr) {
+	public void addNextDirective(int txrLineIndex, Expr expr) {
 		// TODO refactor so we don't need to implement this.
 		throw new RuntimeException();
 	}
@@ -65,5 +65,11 @@ public class BindMatcher extends VerticalMatcher {
 		sb.append(" target=").append(target);
 		sb.append(" value=").append(value);
 		return sb.toString();
+	}
+
+	@Override
+	public void setTxrEndLineIndex(int txrLineIndex) {
+		// TODO Do we need this?
+		
 	}
 }

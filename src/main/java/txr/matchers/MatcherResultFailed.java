@@ -1,5 +1,9 @@
 package txr.matchers;
 
-public class MatcherResultFailed {
+import txr.matchers.MatcherResult.IControlCallback;
+
+public abstract class MatcherResultFailed {
+
+	public abstract void createControls(IControlCallback callback, int indentation);
 
 }

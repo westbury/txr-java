@@ -11,7 +11,7 @@ public class AssertContext {
 
 	public void checkMatchFailureIsOk(int lineNumber, Matcher matcher) {
 		if (lineNumberOfAssert != 0) {
-			throw new RuntimeException("Assert on line " + lineNumberOfAssert + " fails. Line number " + lineNumber + " does not match " + matcher.toString() + ".");
+			throw new TxrAssertException(lineNumberOfAssert, lineNumber, matcher);
 		}
 	}
 }

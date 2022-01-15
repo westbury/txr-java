@@ -41,7 +41,7 @@ public class ThrowMatcher extends VerticalMatcher {
 	}
 
 	@Override
-	public void addNextDirective(Expr expr) {
+	public void addNextDirective(int txrLineIndex, Expr expr) {
 		// TODO refactor so we don't need to implement this.
 		throw new RuntimeException();
 	}
@@ -61,5 +61,11 @@ public class ThrowMatcher extends VerticalMatcher {
 			sb.append(" exceptionType=").append(exceptionType.symbolText);
 		}
 		return sb.toString();
+	}
+
+	@Override
+	public void setTxrEndLineIndex(int txrLineIndex) {
+		// TODO We don't nee to know this???
+		
 	}
 }

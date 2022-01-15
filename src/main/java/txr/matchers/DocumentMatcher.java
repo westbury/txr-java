@@ -85,28 +85,28 @@ public class DocumentMatcher {
 
 						switch (symbol.symbolText) {
 						case "collect":
-							CollectMatcher collectMatcher = new CollectMatcher(expr);
+							CollectMatcher collectMatcher = new CollectMatcher(lineIndex, expr);
 							processor.addNextMatcherInMatchSequence(collectMatcher);
 							processorStack.push(processor);
 							processor = collectMatcher;
 							break;
 
 						case "cases":
-							CasesMatcher casesMatcher = new CasesMatcher(expr);
+							CasesMatcher casesMatcher = new CasesMatcher(lineIndex, expr);
 							processor.addNextMatcherInMatchSequence(casesMatcher);
 							processorStack.push(processor);
 							processor = casesMatcher;
 							break;
 
 						case "maybe":
-							MaybeMatcher maybeMatcher = new MaybeMatcher(expr);
+							MaybeMatcher maybeMatcher = new MaybeMatcher(lineIndex, expr);
 							processor.addNextMatcherInMatchSequence(maybeMatcher);
 							processorStack.push(processor);
 							processor = maybeMatcher;
 							break;
 
 						case "skip":
-							SkipMatcher skipMatcher = new SkipMatcher(expr);
+							SkipMatcher skipMatcher = new SkipMatcher(lineIndex, expr);
 							processor.addNextMatcherInMatchSequence(skipMatcher);
 							processorStack.push(processor);
 							processor = skipMatcher;
@@ -134,8 +134,10 @@ public class DocumentMatcher {
 								 * so we really have to pop twice, first pop the @(skip)
 								 * then pop the containing object which the @(end) is ending.
 								 */
+								processor.setTxrEndLineIndex(lineIndex);
 								processor = processorStack.pop();
 							}
+							processor.setTxrEndLineIndex(lineIndex);
 							processor = processorStack.pop();
 							break;
 
@@ -162,7 +164,7 @@ public class DocumentMatcher {
 								processor = processorStack.pop();
 							}
 							
-							processor.addNextDirective(expr);	
+							processor.addNextDirective(lineIndex, expr);	
 						}
 
 					} else {

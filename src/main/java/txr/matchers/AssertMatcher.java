@@ -41,7 +41,7 @@ public class AssertMatcher extends VerticalMatcher {
 	}
 
 	@Override
-	public void addNextDirective(Expr expr) {
+	public void addNextDirective(int txrLineIndex, Expr expr) {
 		// TODO refactor so we don't need to implement this.
 		throw new RuntimeException();
 	}
@@ -49,7 +49,7 @@ public class AssertMatcher extends VerticalMatcher {
 	@Override
 	public MatcherResult match(LinesFromInputReader reader, MatchContext context) {
 		/*
-		 * An 'assert' directive will always match.  However we mark the bindings
+		 * An 'assert' directive will always matches.  However we mark the bindings
 		 * to indicate that it is an error if the bindings are to be discarded due
 		 * to the lack of a match.
 		 */
@@ -65,5 +65,11 @@ public class AssertMatcher extends VerticalMatcher {
 			sb.append(" exceptionType=").append(exceptionType.symbolText);
 		}
 		return sb.toString();
+	}
+
+	@Override
+	public void setTxrEndLineIndex(int txrLineIndex) {
+		// TODO Do we need this?
+		
 	}
 }

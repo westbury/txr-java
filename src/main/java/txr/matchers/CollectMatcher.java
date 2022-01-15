@@ -27,7 +27,13 @@ public class CollectMatcher extends VerticalMatcher {
 	
 	MatchSequence last;
 	
-	public CollectMatcher(Expr expr) {
+	int txrLineNumber;
+	int untilTxrLineNumber;
+	private int txrEndLineIndex;
+	
+	public CollectMatcher(int txrLineNumber, Expr expr) {
+		this.txrLineNumber = txrLineNumber;
+		
 		KeywordValues keywordValues = new KeywordValues(expr);
 		
 		mintimes = keywordValues.removeInteger(":mintimes");
@@ -73,7 +79,7 @@ public class CollectMatcher extends VerticalMatcher {
 	}
 
 	@Override
-	public void addNextDirective(Expr expr) {
+	public void addNextDirective(int txrLineIndex, Expr expr) {
 		Symbol symbol = (Symbol)expr.subExpressions.get(0);
 		switch (symbol.symbolText.toLowerCase()) {
 			case "until":
@@ -81,6 +87,7 @@ public class CollectMatcher extends VerticalMatcher {
 					throw new RuntimeException("Can't have UNTIL directive if already in an UNTIL or LAST block in the same COLLECT.");
 				}
 				where = BlockType.UNTIL;
+				untilTxrLineNumber = txrLineIndex;
 				until = new MatchSequence();
 				break;
 				
@@ -100,6 +107,9 @@ public class CollectMatcher extends VerticalMatcher {
 	public MatcherResult match(LinesFromInputReader reader, MatchContext context) {
 		List<MatchResultsBase> nestedBindingsList = new ArrayList<>();
 
+		int startOfCollect = reader.getCurrent();
+		int untilOfCollect = 0;
+		int endOfCollect = 0;
 		List<MatcherResultSuccess> bodyMatchers = new ArrayList<>();
 		MatcherResultSuccess untilMatch = null;
 		MatcherResultSuccess lastMatch = null;
@@ -119,6 +129,9 @@ public class CollectMatcher extends VerticalMatcher {
 				if (untilMatcherResult.isSuccess()) {
 					reader.setCurrent(start);
 					untilMatch = untilMatcherResult.getSuccessfulResult();
+					untilOfCollect = start;
+					// the 'end' can go before the 'until' data, as we have to rewind data anyway
+					endOfCollect = reader.getCurrent();
 					break;
 				} else {
 					/*
@@ -196,16 +209,18 @@ public class CollectMatcher extends VerticalMatcher {
 				}
 			}
 		} while (!reader.isEndOfFile());
-		
+
+		endOfCollect = reader.getCurrent();
+
 		if (mintimes != null) {
 			if (nestedBindingsList.size() < mintimes) {
 				String message = "Collect has :mintimes set to " + mintimes + " but " + nestedBindingsList.size() + " matches were found.";
-				return new MatcherResult(new MatcherResultCollectFailure(message, bodyMatchers, lastMatch, untilMatch));
+				return new MatcherResult(new MatcherResultCollectFailure(startOfCollect, txrLineNumber, message, bodyMatchers, lastMatch, untilMatch));
 			}
 		}
 
 		context.bindings.addList("collect", nestedBindingsList);
-		return new MatcherResult(new MatcherResultCollectSuccess(bodyMatchers, lastMatch, untilMatch));
+		return new MatcherResult(new MatcherResultCollectSuccess(txrLineNumber, startOfCollect, untilTxrLineNumber, untilOfCollect, txrEndLineIndex, endOfCollect, bodyMatchers, lastMatch, untilMatch));
 	}
 
 	public String toString() {
@@ -224,5 +239,10 @@ public class CollectMatcher extends VerticalMatcher {
 			sb.append(" last=").append(last.toString());
 		}
 		return sb.toString();
+	}
+
+	@Override
+	public void setTxrEndLineIndex(int txrLineIndex) {
+		this.txrEndLineIndex = txrLineIndex;
 	}
 }

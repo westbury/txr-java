@@ -13,6 +13,8 @@ public abstract class VerticalMatcher extends Matcher {
 
 	public abstract void addNextMatcherInMatchSequence(Matcher matcher);
 
-	public abstract void addNextDirective(Expr directive);
+	public abstract void addNextDirective(int txrLineIndex, Expr directive);
+
+	public abstract void setTxrEndLineIndex(int txrLineIndex);
 
 }

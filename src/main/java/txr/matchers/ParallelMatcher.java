@@ -8,11 +8,15 @@ import txr.parser.Symbol;
 
 public abstract class ParallelMatcher extends VerticalMatcher {
 
+	protected int txrLineNumber;
+
 	private MatchSequence where;
 	
 	List<MatchSequence> content = new ArrayList<>();
 	
-	public ParallelMatcher() {
+	public ParallelMatcher(int txrLineNumber) {
+		this.txrLineNumber = txrLineNumber;
+		
 		where = new MatchSequence();
 		content.add(where);
 	}
@@ -23,7 +27,7 @@ public abstract class ParallelMatcher extends VerticalMatcher {
 	}
 
 	@Override
-	public void addNextDirective(Expr expr) {
+	public void addNextDirective(int txrLineIndex, Expr expr) {
 		Symbol symbol = (Symbol)expr.subExpressions.get(0);
 		switch (symbol.symbolText.toLowerCase()) {
 			case "or":

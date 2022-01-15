@@ -7,7 +7,11 @@ import txr.parser.Expr;
 
 public class MaybeMatcher extends ParallelMatcher {
 
-	public MaybeMatcher(Expr expr) {
+	private int txrEndLineIndex;
+
+	public MaybeMatcher(int txrLineNumber, Expr expr) {
+		super(txrLineNumber);
+		
 		KeywordValues keywordValues = new KeywordValues(expr);
 		// No keywords here
 		keywordValues.failIfUnusedKeywords();
@@ -53,6 +57,11 @@ public class MaybeMatcher extends ParallelMatcher {
 		reader.setCurrent(longest);
 		
 		return new MatcherResult(new MatcherResultMaybe(reader.getCurrent(), allMatcherResults));
+	}
+
+	@Override
+	public void setTxrEndLineIndex(int txrLineIndex) {
+		this.txrEndLineIndex = txrLineIndex;
 	}
 
 }

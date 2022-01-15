@@ -4,7 +4,9 @@ import txr.parser.Expr;
 
 public class CasesMatcher extends ParallelMatcher {
 
-	public CasesMatcher(Expr expr) {
+	public CasesMatcher(int txrLineNumber, Expr expr) {
+		super(txrLineNumber);
+		
 		KeywordValues keywordValues = new KeywordValues(expr);
 		// No keywords here
 		keywordValues.failIfUnusedKeywords();
@@ -39,7 +41,13 @@ public class CasesMatcher extends ParallelMatcher {
 			}
 		}
 		
-		return new MatcherResult(new MatcherResultCaseFailure(reader.getCurrent()));
+		return new MatcherResult(new MatcherResultCaseFailure(txrLineNumber, reader.getCurrent()));
+	}
+
+	@Override
+	public void setTxrEndLineIndex(int txrLineIndex) {
+		// TODO Do we need this?
+		
 	}
 
 }

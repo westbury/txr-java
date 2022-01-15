@@ -1,5 +1,7 @@
 package txr.matchers;
 
+import txr.matchers.MatcherResult.IControlCallback;
+
 public class MatcherResultLineFailure extends MatcherResultFailed {
 
 	public final int txrLineNumber;
@@ -12,6 +14,12 @@ public class MatcherResultLineFailure extends MatcherResultFailed {
 		this.txrLineNumber = txrLineNumber;
 		this.lineNumber = lineNumber;
 		this.message = message;
+	}
+
+	@Override
+	public void createControls(IControlCallback callback, int indentation) {
+		callback.createMismatch(txrLineNumber, lineNumber, indentation, message);
+		
 	}
 
 }
