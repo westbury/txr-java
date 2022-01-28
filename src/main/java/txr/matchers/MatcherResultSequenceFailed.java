@@ -6,12 +6,18 @@ import txr.matchers.MatcherResult.IControlCallback;
 
 public class MatcherResultSequenceFailed extends MatcherResultFailed {
 
-	private List<MatcherResultSuccess> successfulMatches;
-	private MatcherResultFailed failedMatch;
+	List<MatcherResultSuccess> successfulMatches;
+	MatcherResultFailed failedMatch;
 
 	public MatcherResultSequenceFailed(List<MatcherResultSuccess> successfulMatches, MatcherResultFailed failedMatch) {
 		this.successfulMatches = successfulMatches;
 		this.failedMatch = failedMatch;
+		this.score = successfulMatches.size() * 10 + failedMatch.getScore();
+	}
+
+	@Override
+	public boolean isException() {
+		return failedMatch.isException();
 	}
 
 	@Override

@@ -52,9 +52,17 @@ public class MatchSequence extends VerticalMatcher {
 			MatcherResult matches = matcher.match(reader, subContext);
 			if (!matches.isSuccess()) {
 				// This check needs to be done here so the user sees the actual line that failed.
-				context.assertContext.checkMatchFailureIsOk(reader.getCurrent(), matcher);
-				reader.setCurrent(start);
-				return new MatcherResult(new MatcherResultSequenceFailed(successfulMatches, matches.getFailedResult()));
+				
+				TxrAssertException failedAssert = context.assertContext.checkMatchFailureIsOk(reader.getCurrent(), matcher);
+				if (failedAssert != null) {
+					// This matcher fails because we got all match failures followed by an assert failure
+					return new MatcherResult(new MatcherResultSequenceException(successfulMatches, matches.getFailedResult(), failedAssert));
+				} else {
+					context.assertContext.checkMatchFailureIsOk(reader.getCurrent(), matcher);
+					reader.setCurrent(start);
+					return new MatcherResult(new MatcherResultSequenceFailed(successfulMatches, matches.getFailedResult()));
+				}
+
 			}
 			
 			// It matches, so add this to our line matching list for debugging

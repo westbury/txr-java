@@ -9,9 +9,11 @@ public class AssertContext {
 		
 	}
 
-	public void checkMatchFailureIsOk(int lineNumber, Matcher matcher) {
+	public TxrAssertException checkMatchFailureIsOk(int lineNumber, Matcher matcher) {
 		if (lineNumberOfAssert != 0) {
-			throw new TxrAssertException(lineNumberOfAssert, lineNumber, matcher);
+			return new TxrAssertException(lineNumberOfAssert, lineNumber, matcher);
+		} else {
+			return null;
 		}
 	}
 }

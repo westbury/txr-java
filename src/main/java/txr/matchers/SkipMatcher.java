@@ -67,13 +67,45 @@ public class SkipMatcher extends VerticalMatcher {
 		 */
 		MatchContext subContext = new MatchContext(context.bindings);
 		
+		int startLine = reader.getCurrent();
+		
+		/*
+		 * If the match fails, we compare the results to find the one that
+		 * goes 'furthest' through the TXR input.
+		 * 
+		 * At some time we may implement a feature that allows the user to select the
+		 * line that the @(skip) is expected to skip to, in case our guess is wrong.
+		 */
+		int bestLine = -1;
+		MatcherResultFailed best = null;
 		MatcherResult matches = content.match(reader, subContext);
 		while (!matches.isSuccess() && !reader.isEndOfFile()) {
 			reader.fetchLine();
+			int skippedToLine = reader.getCurrent();
 			matches = content.match(reader, subContext);
+			if (matches.isSuccess()) {
+				return new MatcherResult(new MatcherResultSkipSuccess(this.txrLineNumber, startLine, skippedToLine, matches.getSuccessfulResult()));
+			}
+			if (matches.getFailedResult().isException()) {
+				/*
+				 * If an exception was thrown then we return results showing a skip to this line,
+				 * even if skips to previous lines showed a better match.
+				 * 
+				 * This assumes that it is the @(assert) that needs fixing. It may be that the problem is that
+				 * a previous line should have matched, meaning that the assert failure should never be reached.
+				 * This is a less likely situation and the user can always force the skip to the previous line
+				 * using the debugger.
+				 */
+				return new MatcherResult(new MatcherResultSkipFailure(this.txrLineNumber, startLine, skippedToLine, matches.getFailedResult()));
+			}
+			int score = matches.getFailedResult().getScore();
+			if (best == null || score > best.getScore()) {
+				bestLine = reader.getCurrent(); 
+				best = matches.getFailedResult();
+			}
 		}
 
-		return matches;
+		return new MatcherResult(new MatcherResultSkipFailure(this.txrLineNumber, startLine, bestLine, best));
 	}
 
 	public String toString() {

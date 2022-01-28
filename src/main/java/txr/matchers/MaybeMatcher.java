@@ -43,12 +43,12 @@ public class MaybeMatcher extends ParallelMatcher {
 				reader.setCurrent(start);
 			} else {
 				/*
-				 * The sub-sequence did not match.  Check only that
-				 * the matching did not get as far as processing any @(assert)
-				 * directives inside the sub-sequence.  If an @(assert)
-				 * directive was processed then the failure to match is an error.
+				 * Check for inner exception first. If an inner exception causes an outer @(assert) to
+				 * fail then really it is the inner exception we are interested in.
 				 */
-				subContext.assertContext.checkMatchFailureIsOk(reader.getCurrent(), eachMatchSequence);
+				if (eachMatcherResult.getFailedResult().isException()) {
+					return new MatcherResult(new MatcherResultMaybeFailure(reader.getCurrent(), allMatcherResults, eachMatcherResult.getFailedResult()));
+				}
 			}
 			
 			allMatcherResults.add(eachMatcherResult);
@@ -56,7 +56,7 @@ public class MaybeMatcher extends ParallelMatcher {
 
 		reader.setCurrent(longest);
 		
-		return new MatcherResult(new MatcherResultMaybe(reader.getCurrent(), allMatcherResults));
+		return new MatcherResult(new MatcherResultMaybeSuccess(reader.getCurrent(), allMatcherResults));
 	}
 
 	@Override
