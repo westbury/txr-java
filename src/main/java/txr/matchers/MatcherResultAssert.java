@@ -4,16 +4,32 @@ import txr.matchers.MatcherResult.IControlCallback;
 
 public class MatcherResultAssert extends MatcherResultSuccess {
 
+	private int txrLineNumber;
+
 	private int startLine;
 
-	public MatcherResultAssert(int startLine) {
+	private boolean assertFailed = false;
+	
+	public MatcherResultAssert(int txrLineNumber, int startLine) {
+		this.txrLineNumber = txrLineNumber;
 		this.startLine = startLine;
 	}
 
+	public void setFailed() {
+		assertFailed = true;
+	}
+	
 	@Override
 	public void createControls(IControlCallback callback, int indentation) {
-		// TODO Auto-generated method stub
-		
+		if (assertFailed) {
+			callback.createDirectiveWithError(txrLineNumber, startLine, indentation);
+		} else {
+			callback.createDirective(txrLineNumber, startLine, indentation);
+		}
+	}
+
+	public String getDescription() {
+		return "on line " + txrLineNumber + " (matching  at line " + startLine + " in the data)" ;
 	}
 
 }

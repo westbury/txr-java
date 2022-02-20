@@ -42,6 +42,11 @@ public class MatcherResult {
 		 * To support this, the input data can be wound back to a previous line.
 		 */
 		void rewind(int textDataLineNumber);
+
+		/**
+		 * Currently, this is called only for an @(assert) that failed.
+		 */
+		void createDirectiveWithError(int txrLineNumber, int startLine, int indentation);
 	}
 	
 	public void createControls(IControlCallback callback) {

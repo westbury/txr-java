@@ -2,16 +2,17 @@ package txr.matchers;
 
 public class AssertContext {
 
-	private int lineNumberOfAssert = 0;
+	private MatcherResultAssert assertMatcherResult = null;
 	
-	public void setMatchObligatory(int lineNumberOfAssert) {
-		this.lineNumberOfAssert  = lineNumberOfAssert;
+	public void setMatchObligatory(MatcherResultAssert assertMatcherResult) {
+		this.assertMatcherResult  = assertMatcherResult;
 		
 	}
 
 	public TxrAssertException checkMatchFailureIsOk(int lineNumber, Matcher matcher) {
-		if (lineNumberOfAssert != 0) {
-			return new TxrAssertException(lineNumberOfAssert, lineNumber, matcher);
+		if (assertMatcherResult != null) {
+			assertMatcherResult.setFailed();
+			return new TxrAssertException(assertMatcherResult, lineNumber, matcher);
 		} else {
 			return null;
 		}

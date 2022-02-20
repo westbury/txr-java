@@ -13,8 +13,12 @@ public class AssertMatcher extends VerticalMatcher {
 	private Symbol exceptionType = null;
 
 	private List<SubExpression> parameters = new ArrayList<>();
+
+	private int txrLineNumber;
 	
-	public AssertMatcher(Expr expr) {
+	public AssertMatcher(int txrLineNumber, Expr expr) {
+		this.txrLineNumber = txrLineNumber;
+		
 		Iterator<SubExpression> iter = expr.subExpressions.iterator();
 
 		// The first is the name of the directive, so ignore that.
@@ -53,9 +57,9 @@ public class AssertMatcher extends VerticalMatcher {
 		 * to indicate that it is an error if the bindings are to be discarded due
 		 * to the lack of a match.
 		 */
-		context.assertContext.setMatchObligatory(reader.getCurrent());
-		
-		return new MatcherResult(new MatcherResultAssert(reader.getCurrent()));
+		MatcherResultAssert result = new MatcherResultAssert(txrLineNumber, reader.getCurrent());
+		context.assertContext.setMatchObligatory(result);
+		return new MatcherResult(result);
 	}
 
 	public String toString() {

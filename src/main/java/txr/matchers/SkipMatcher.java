@@ -78,11 +78,9 @@ public class SkipMatcher extends VerticalMatcher {
 		 */
 		int bestLine = -1;
 		MatcherResultFailed best = null;
-		MatcherResult matches = content.match(reader, subContext);
-		while (!matches.isSuccess() && !reader.isEndOfFile()) {
-			reader.fetchLine();
+		while (!reader.isEndOfFile()) {
 			int skippedToLine = reader.getCurrent();
-			matches = content.match(reader, subContext);
+			MatcherResult matches = content.match(reader, subContext);
 			if (matches.isSuccess()) {
 				return new MatcherResult(new MatcherResultSkipSuccess(this.txrLineNumber, startLine, skippedToLine, matches.getSuccessfulResult()));
 			}
@@ -98,11 +96,15 @@ public class SkipMatcher extends VerticalMatcher {
 				 */
 				return new MatcherResult(new MatcherResultSkipFailure(this.txrLineNumber, startLine, skippedToLine, matches.getFailedResult()));
 			}
+			// Else it's a mismatch, but no exception
 			int score = matches.getFailedResult().getScore();
 			if (best == null || score > best.getScore()) {
 				bestLine = reader.getCurrent(); 
 				best = matches.getFailedResult();
 			}
+			
+			// Move on to next 'skipped to' line
+			reader.fetchLine();
 		}
 
 		return new MatcherResult(new MatcherResultSkipFailure(this.txrLineNumber, startLine, bestLine, best));

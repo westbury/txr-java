@@ -113,7 +113,7 @@ public class DocumentMatcher {
 							break;
 
 						case "assert":
-							AssertMatcher assertMatcher = new AssertMatcher(expr);
+							AssertMatcher assertMatcher = new AssertMatcher(lineIndex, expr);
 							processor.addNextMatcherInMatchSequence(assertMatcher);
 							break;
 
