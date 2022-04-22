@@ -26,9 +26,24 @@ public class MatcherResult {
 		return success != null;
 	}
 	
+	public interface TxrAction {
+		CommandId getId();
+		String getLabel();
+	}
+	
+	public enum CommandId {
+		ExpectAnotherCollectMatch
+	}
+	
+	public interface TxrCommandExecution {
+		CommandId getCommandId();
+		int getTxrLineNumber();
+		int getDataLineNumber();
+	}
+	
 	public interface IControlCallback {
 		
-		void createDirective(int txrLineIndex, int textDataLineNumber, int indentation);
+		void createDirective(int txrLineIndex, int textDataLineNumber, int indentation, TxrAction[] actions);
 		
 		void createMatch(int txrLineNumber, int textDataLineNumber, int indentation);
 

@@ -1,8 +1,11 @@
 package txr.matchers;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
+import txr.matchers.TxrState.CollectState;
 import txr.parser.Expr;
 import txr.parser.Symbol;
 
@@ -105,6 +108,15 @@ public class CollectMatcher extends VerticalMatcher {
 	
 	@Override
 	public MatcherResult match(LinesFromInputReader reader, MatchContext context) {
+		// Get state for this collect instance.
+		boolean showExtraUnmatched = false;
+		if (context.state != null) {
+			Optional<CollectState> collectState = Arrays.stream(context.state.collectStates).filter(x -> true).findAny();
+			if (collectState.isPresent()) {
+				showExtraUnmatched = collectState.get().showExtraUnmatched;
+			}
+		}
+		
 		List<MatchResultsBase> nestedBindingsList = new ArrayList<>();
 
 		int startOfCollect = reader.getCurrent();
@@ -114,6 +126,14 @@ public class CollectMatcher extends VerticalMatcher {
 		MatcherResultSuccess untilMatch = null;
 		MatcherResultSuccess lastMatch = null;
 
+		// We keep track of the best match since the last collect match.
+		// We reset each time we find a match. This allows us to provide better
+		// diagnostics if a match is missing. (We know a match is missing if either
+		// we do not collect mintimes matches or if a debugging command from the user
+		// tells us a match is missing.
+		int bestLine = -1;
+		MatcherResultFailed best = null;
+
 		int numberOfGapLines = 0;
 		int endOfLastMatch = reader.getCurrent();
 		do {
@@ -122,7 +142,7 @@ public class CollectMatcher extends VerticalMatcher {
 				// Note that in this case the pending bindings are dropped,
 				// even when the @(until) clause matches.
 				MatchResultsWithPending nestedBindings = new MatchResultsWithPending(context.bindings);
-				MatchContext nestedContext = new MatchContext(nestedBindings);
+				MatchContext nestedContext = new MatchContext(nestedBindings, context.state);
 				
 				String temp = reader.toString();
 				MatcherResult untilMatcherResult = until.match(reader, nestedContext);
@@ -148,7 +168,7 @@ public class CollectMatcher extends VerticalMatcher {
 		
 			if (last != null) {
 				MatchResultsWithPending nestedBindings = new MatchResultsWithPending(context.bindings);
-				MatchContext nestedContext = new MatchContext(nestedBindings);
+				MatchContext nestedContext = new MatchContext(nestedBindings, context.state);
 				
 				MatcherResult lastMatcherResult = last.match(reader, nestedContext);
 				if (lastMatcherResult.isSuccess()) {
@@ -169,7 +189,7 @@ public class CollectMatcher extends VerticalMatcher {
 			
 			// Look for a match on the body
 			MatchResultsWithPending nestedBindings = new MatchResultsWithPending(context.bindings);
-			MatchContext nestedContext = new MatchContext(nestedBindings);
+			MatchContext nestedContext = new MatchContext(nestedBindings, context.state);
 			
 			MatcherResult bodyMatcherResult = body.match(reader, nestedContext);
 			if (bodyMatcherResult.isSuccess()) {
@@ -177,12 +197,21 @@ public class CollectMatcher extends VerticalMatcher {
 
 				bodyMatchers.add(bodyMatcherResult.getSuccessfulResult());
 				
+				// reset the 'best match' each time we find a match
+				bestLine = -1;
+				best = null;
+
 				if (maxtimes != null && nestedBindingsList.size() == maxtimes) {
 					break;
 				}
 				
 				endOfLastMatch = reader.getCurrent();
 				numberOfGapLines = 0;
+			} else if (bodyMatcherResult.getFailedResult().isException()) {
+				// An assert failure occurred inside the collect.
+				// We return an exception result that contains all the prior collect matches
+				// and this exception result
+				return new MatcherResult(new MatcherResultCollectException(txrLineNumber, startOfCollect, bodyMatchers, lastMatch, untilMatch, bodyMatcherResult.getFailedResult()));
 			} else {
 				/*
 				 * The sub-sequence did not match.  Check only that
@@ -192,7 +221,14 @@ public class CollectMatcher extends VerticalMatcher {
 				 */
 				// TODO this should not be needed because 'match' method should check.
 				// The further 'in' the check, the better the error message.
-				nestedContext.assertContext.checkMatchFailureIsOk(reader.getCurrent(), body);
+//				nestedContext.assertContext.checkMatchFailureIsOk(reader.getCurrent(), body);
+
+				// Else it's a mismatch, but no exception
+				int score = bodyMatcherResult.getFailedResult().getScore();
+				if (best == null || score > best.getScore()) {
+					bestLine = reader.getCurrent(); 
+					best = bodyMatcherResult.getFailedResult();
+				}
 
 				reader.fetchLine();
 				numberOfGapLines++;
@@ -212,10 +248,15 @@ public class CollectMatcher extends VerticalMatcher {
 
 		endOfCollect = reader.getCurrent();
 
+		if (showExtraUnmatched) {
+			String message = "Missing collect";
+			return new MatcherResult(new MatcherResultCollectFailure(txrLineNumber, startOfCollect, message, bodyMatchers, lastMatch, untilMatch, best));
+		}
+		
 		if (mintimes != null) {
 			if (nestedBindingsList.size() < mintimes) {
 				String message = "Collect has :mintimes set to " + mintimes + " but " + nestedBindingsList.size() + " matches were found.";
-				return new MatcherResult(new MatcherResultCollectFailure(startOfCollect, txrLineNumber, message, bodyMatchers, lastMatch, untilMatch));
+				return new MatcherResult(new MatcherResultCollectFailure(txrLineNumber, startOfCollect, message, bodyMatchers, lastMatch, untilMatch, null));
 			}
 		}
 

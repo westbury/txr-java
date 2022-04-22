@@ -1,8 +1,5 @@
 package txr.parser;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * An exception that is thrown when an error occurs in the parser.  This exception is thrown
  * when the thrower has no idea of the line or column or other context.  The exception must be

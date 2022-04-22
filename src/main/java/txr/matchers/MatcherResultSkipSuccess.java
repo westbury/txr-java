@@ -1,6 +1,7 @@
 package txr.matchers;
 
 import txr.matchers.MatcherResult.IControlCallback;
+import txr.matchers.MatcherResult.TxrAction;
 
 public class MatcherResultSkipSuccess extends MatcherResultSuccess {
 
@@ -18,7 +19,7 @@ public class MatcherResultSkipSuccess extends MatcherResultSuccess {
 
 	@Override
 	public void createControls(IControlCallback callback, int indentation) {
-		callback.createDirective(txrLineNumber, startLine, indentation);
+		callback.createDirective(txrLineNumber, startLine, indentation, new TxrAction[0]);
 		this.successfulResult.createControls(callback, indentation);
 		
 	}

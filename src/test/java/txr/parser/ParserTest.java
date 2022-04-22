@@ -7,24 +7,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.List;
-import java.util.Scanner;
-
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import txr.matchers.DocumentMatcher;
-import txr.matchers.MatchResults;
 import txr.matchers.TxrException;
 
 /**
@@ -194,14 +182,14 @@ public class ParserTest {
 				+ "\n"
 				+ "@(collect)\n"
 				+ "Title: @description\n"
-				+ "Amount: £@amount\n"
+				+ "Amount: ï¿½@amount\n"
 				+ "\n"
 				+ "@(until)\n"
 				+ "Conclusion\n"
 				+ "@(end)\n"
 				+ "Conclusion\n"
-				+ "Total: £@delivery\n");
-		assertEquals("[[Text: *Introduction*], [], [[Symbol: collect]], [Text: *Title: *, Ident: description], [Text: *Amount: £*, Ident: amount], [], [[Symbol: until]], [Text: *Conclusion*], [[Symbol: end]], [Text: *Conclusion*], [Text: *Total: £*, Ident: delivery]]", ast.toString());
+				+ "Total: ï¿½@delivery\n");
+		assertEquals("[[Text: *Introduction*], [], [[Symbol: collect]], [Text: *Title: *, Ident: description], [Text: *Amount: ï¿½*, Ident: amount], [], [[Symbol: until]], [Text: *Conclusion*], [[Symbol: end]], [Text: *Conclusion*], [Text: *Total: ï¿½*, Ident: delivery]]", ast.toString());
 	}
 
 }

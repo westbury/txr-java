@@ -22,22 +22,24 @@ public class CasesMatcher extends ParallelMatcher {
 	
 	@Override
 	public MatcherResult match(LinesFromInputReader reader, MatchContext context) {
+		int startOfCases = reader.getCurrent();
+		
 		/*
 		 * Look for a match, going through the cases in order. As soon as one of
 		 * the cases matches, we are done. If none match, this matcher does not
 		 * match.
 		 */
-		List<MatcherResultFailed> failedMatches = new ArrayList<>();
-		for (MatchSequence eachMatchSequence : content) {
-			MatchContext subContext = new MatchContext(context.bindings);
+		List<MatcherResultCaseFailure.Pair> failedMatches = new ArrayList<>();
+		for (Pair eachAlternative : content) {
+			MatchContext subContext = new MatchContext(context.bindings, context.state);
 			
-			MatcherResult eachResult = eachMatchSequence.match(reader, subContext);
+			MatcherResult eachResult = eachAlternative.sequence.match(reader, subContext);
 			if (eachResult.isSuccess()) {
 				// TODO: We probably should also pass the list of prior failures, because part of the
 				// reason why it matched this case is because it did not match any of the prior cases.
 				// Perhaps the user expected a prior case to match (which might affect bindings or lines
 				// consumed).
-				return new MatcherResult(new MatcherResultCaseSuccess(eachResult.getSuccessfulResult()));
+				return new MatcherResult(new MatcherResultCaseSuccess(txrLineNumber, startOfCases, eachResult.getSuccessfulResult()));
 			} else {
 				/*
 				 * The sub-sequence did not match.  Check only that
@@ -45,18 +47,18 @@ public class CasesMatcher extends ParallelMatcher {
 				 * directives inside the sub-sequence.  If an @(assert)
 				 * directive was processed then the failure to match is an error.
 				 */
-				TxrAssertException failedAssert = subContext.assertContext.checkMatchFailureIsOk(reader.getCurrent(), eachMatchSequence);
+				TxrAssertException failedAssert = subContext.assertContext.checkMatchFailureIsOk(reader.getCurrent(), eachAlternative.sequence);
 				if (failedAssert != null) {
 					// This matcher fails because we got all match failures followed by an assert failure
-					return new MatcherResult(new MatcherResultCaseException(txrLineNumber, reader.getCurrent(), failedMatches, failedAssert));
+					return new MatcherResult(new MatcherResultCaseException(txrLineNumber, startOfCases, failedMatches, failedAssert));
 				} else {
-					failedMatches.add(eachResult.getFailedResult());
+					failedMatches.add(new MatcherResultCaseFailure.Pair(eachAlternative.txrLineIndex, eachResult.getFailedResult()));
 				}
 			}
 		}
 		
 		// We fail because they all failed (no assert failure)
-		return new MatcherResult(new MatcherResultCaseFailure(txrLineNumber, reader.getCurrent()));
+		return new MatcherResult(new MatcherResultCaseFailure(txrLineNumber, startOfCases, "All cases failed", failedMatches));
 	}
 
 	@Override

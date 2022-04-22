@@ -2,10 +2,14 @@ package txr.matchers;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.Scanner;
 import java.util.Stack;
 
+import txr.matchers.MatcherResult.TxrCommandExecution;
+import txr.matchers.TxrState.CollectState;
 import txr.parser.AST;
 import txr.parser.Expr;
 import txr.parser.Line;
@@ -186,16 +190,18 @@ public class DocumentMatcher {
 	public class MatchPair {
 		public MatcherResult matcherResults;
 		public MatchResults results;
+		public TxrState newState;
 
-		public MatchPair(MatcherResult matcherResults, MatchResults results) {
+		public MatchPair(MatcherResult matcherResults, MatchResults results, TxrState newState) {
 			this.matcherResults = matcherResults;
 			this.results = results;
+			this.newState = newState;
 		}
 	}
 	public MatchResults process(String [] inputText) {
 		LinesFromInputReader reader = new LinesFromInputReader(inputText);
 		MatchResults results = new MatchResultsBase();
-		MatchContext context = new MatchContext(results);
+		MatchContext context = new MatchContext(results, null);
 		
 		MatcherResult matched = topLevelMatcher.match(reader, context);
 
@@ -209,10 +215,41 @@ public class DocumentMatcher {
 			return null;
 		}
 	}
-	public MatchPair process2(String [] inputText) {
+	
+	/**
+	 * 
+	 * @param inputText
+	 * @param state the debugging state, being the state needed in addition to the TXR source and the target data,
+	 * 				 which is sent by the server to the client and returned as-is to the server on the next request.
+	 * 				This state should always be null if the TXR source or the target data change.
+	 * @param command an optional command, which will alter the state and result in changes in the match controls.
+	 * @return a callback that creates controls, together with the updated state
+	 */
+	public MatchPair process2(String [] inputText, TxrState state, TxrCommandExecution command) {
 		LinesFromInputReader reader = new LinesFromInputReader(inputText);
 		MatchResults results = new MatchResultsBase();
-		MatchContext context = new MatchContext(results);
+		
+		// Update the state
+		if (command != null) {
+			if (state == null) {
+				state = new TxrState() {};
+			}
+			switch (command.getCommandId()) {
+				case ExpectAnotherCollectMatch:
+					Optional<CollectState> collectState = Arrays.stream(state.collectStates).filter(x -> true).findAny();
+					if (collectState.isPresent()) {
+						collectState.get().showExtraUnmatched = true;
+					} else {
+						List<CollectState> asMutableList = new ArrayList<CollectState>(Arrays.asList(state.collectStates));
+						asMutableList.add(state.new CollectState(command.getTxrLineNumber(), command.getDataLineNumber(), true));
+						state.collectStates = asMutableList.toArray(new CollectState[0]);
+						
+					}
+					break;
+			}
+		}
+		
+		MatchContext context = new MatchContext(results, state);
 		
 		MatcherResult matched = topLevelMatcher.match(reader, context);
 
@@ -220,7 +257,7 @@ public class DocumentMatcher {
 		
 		// Can this be cleaned up a bit?  Perhaps bindings should be part
 		// of MatcherResult?
-		return new MatchPair(matched, results);
+		return new MatchPair(matched, results, state);
 	}
 
 	/**

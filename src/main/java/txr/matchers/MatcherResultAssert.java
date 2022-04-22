@@ -1,6 +1,7 @@
 package txr.matchers;
 
 import txr.matchers.MatcherResult.IControlCallback;
+import txr.matchers.MatcherResult.TxrAction;
 
 public class MatcherResultAssert extends MatcherResultSuccess {
 
@@ -24,7 +25,7 @@ public class MatcherResultAssert extends MatcherResultSuccess {
 		if (assertFailed) {
 			callback.createDirectiveWithError(txrLineNumber, startLine, indentation);
 		} else {
-			callback.createDirective(txrLineNumber, startLine, indentation);
+			callback.createDirective(txrLineNumber, startLine, indentation, new TxrAction[0]);
 		}
 	}
 

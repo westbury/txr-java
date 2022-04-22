@@ -42,7 +42,7 @@ public class MatchSequence extends VerticalMatcher {
 		 * Hence we need to create our sub-context.
 		 */
 		MatchResultsWithPending subBindings = new MatchResultsWithPending(context.bindings);
-		MatchContext subContext = new MatchContext(subBindings, context.assertContext);
+		MatchContext subContext = new MatchContext(subBindings, context.state, context.assertContext);
 		
 		List<MatcherResultSuccess> successfulMatches = new ArrayList<>();
 		
@@ -55,7 +55,7 @@ public class MatchSequence extends VerticalMatcher {
 				
 				TxrAssertException failedAssert = context.assertContext.checkMatchFailureIsOk(reader.getCurrent(), matcher);
 				if (failedAssert != null) {
-					// This matcher fails because we got all match failures followed by an assert failure
+					// This matcher throws an exception because we got a match failure after an @(assert)
 					return new MatcherResult(new MatcherResultSequenceException(successfulMatches, matches.getFailedResult(), failedAssert));
 				} else {
 					context.assertContext.checkMatchFailureIsOk(reader.getCurrent(), matcher);

@@ -65,7 +65,7 @@ public class SkipMatcher extends VerticalMatcher {
 		 * do not individually have to match.  We just have to find a match
 		 * eventually.
 		 */
-		MatchContext subContext = new MatchContext(context.bindings);
+		MatchContext subContext = new MatchContext(context.bindings, context.state);
 		
 		int startLine = reader.getCurrent();
 		

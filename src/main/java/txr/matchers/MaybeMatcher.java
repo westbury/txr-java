@@ -28,10 +28,10 @@ public class MaybeMatcher extends ParallelMatcher {
 		int longest = start;
 		List<MatcherResult> allMatcherResults = new ArrayList<>();
 		
-		for (MatchSequence eachMatchSequence : content) {
-			MatchContext subContext = new MatchContext(context.bindings);
+		for (Pair eachMatchSequence : content) {
+			MatchContext subContext = new MatchContext(context.bindings, context.state);
 			
-			MatcherResult eachMatcherResult = eachMatchSequence.match(reader, subContext);
+			MatcherResult eachMatcherResult = eachMatchSequence.sequence.match(reader, subContext);
 			if (eachMatcherResult.isSuccess()) {
 				
 				int endOfThisMatch = reader.getCurrent();
@@ -47,7 +47,7 @@ public class MaybeMatcher extends ParallelMatcher {
 				 * fail then really it is the inner exception we are interested in.
 				 */
 				if (eachMatcherResult.getFailedResult().isException()) {
-					return new MatcherResult(new MatcherResultMaybeFailure(reader.getCurrent(), allMatcherResults, eachMatcherResult.getFailedResult()));
+					return new MatcherResult(new MatcherResultMaybeFailure(txrLineNumber, start, allMatcherResults, eachMatcherResult.getFailedResult()));
 				}
 			}
 			
@@ -56,7 +56,7 @@ public class MaybeMatcher extends ParallelMatcher {
 
 		reader.setCurrent(longest);
 		
-		return new MatcherResult(new MatcherResultMaybeSuccess(reader.getCurrent(), allMatcherResults));
+		return new MatcherResult(new MatcherResultMaybeSuccess(txrLineNumber, start, allMatcherResults));
 	}
 
 	@Override

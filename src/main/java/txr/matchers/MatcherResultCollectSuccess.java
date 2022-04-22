@@ -2,7 +2,9 @@ package txr.matchers;
 
 import java.util.List;
 
+import txr.matchers.MatcherResult.CommandId;
 import txr.matchers.MatcherResult.IControlCallback;
+import txr.matchers.MatcherResult.TxrAction;
 
 public class MatcherResultCollectSuccess extends MatcherResultSuccess {
 
@@ -31,7 +33,19 @@ public class MatcherResultCollectSuccess extends MatcherResultSuccess {
 
 	@Override
 	public void createControls(IControlCallback callback, int indentation) {
-		callback.createDirective(txrLineNumber, startLine, indentation);
+		TxrAction[] actions = {
+			new TxrAction() {
+				@Override
+				public String getLabel() {
+					return "Expect another collect match here";
+				}
+				@Override
+				public CommandId getId() {
+					return CommandId.ExpectAnotherCollectMatch;
+				}
+			}
+		};
+		callback.createDirective(txrLineNumber, startLine, indentation, actions);
 		
 		for (MatcherResultSuccess bodyMatcher : bodyMatchers) {
 			bodyMatcher.createControls(callback, indentation + 1);
@@ -39,7 +53,7 @@ public class MatcherResultCollectSuccess extends MatcherResultSuccess {
 
 		// Show the 'until' clause matching, but only if it matched on something
 		if (untilMatch != null) {
-			callback.createDirective(untilTxrLineNumber, untilLine, indentation);
+			callback.createDirective(untilTxrLineNumber, untilLine, indentation, new TxrAction[0]);
 			
 			// The matching that occurs in the 'until' clause is unusual.
 			// No bindings occur (check against reference impl) and the data
@@ -50,7 +64,7 @@ public class MatcherResultCollectSuccess extends MatcherResultSuccess {
 			callback.rewind(untilLine);
 		}
 
-		callback.createDirective(endTxrLineNumber, endLine, indentation);
+		callback.createDirective(endTxrLineNumber, endLine, indentation, new TxrAction[0]);
 	}
 
 }

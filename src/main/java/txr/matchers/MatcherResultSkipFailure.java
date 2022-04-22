@@ -1,6 +1,7 @@
 package txr.matchers;
 
 import txr.matchers.MatcherResult.IControlCallback;
+import txr.matchers.MatcherResult.TxrAction;
 
 public class MatcherResultSkipFailure extends MatcherResultFailed {
 
@@ -26,7 +27,7 @@ public class MatcherResultSkipFailure extends MatcherResultFailed {
 
 	@Override
 	public void createControls(IControlCallback callback, int indentation) {
-		callback.createDirective(txrLineNumber, startLineNumber, indentation);
+		callback.createDirective(txrLineNumber, startLineNumber, indentation, new TxrAction[0]);
 		bestFailedMatch.createControls(callback, indentation);
 //		callback.createMismatch(txrLineNumber, startLineNumber, indentation, "All possible skips failed to match");
 	}
