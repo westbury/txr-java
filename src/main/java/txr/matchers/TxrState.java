@@ -5,14 +5,15 @@ package txr.matchers;
 public class TxrState {
 	
 	public TxrState() {
-		collectStates = new CollectState[0];
+		lineStates = new LineState[0];
 	}
 	
-	public class CollectState {
-		public CollectState(int txrLineNumber, int dataLineNumber, boolean showExtraUnmatched) {
+	public class LineState {
+		public LineState(int txrLineNumber, int dataLineNumber) {
 			this.txrLineNumber = txrLineNumber;
 			this.dataLineNumber = dataLineNumber;
-			this.showExtraUnmatched = showExtraUnmatched;
+			this.showExtraUnmatched = false;
+			this.showFailingMaybe = false;
 			
 		}
 		int txrLineNumber;
@@ -21,8 +22,12 @@ public class TxrState {
 		// If this flag is on, it means the user is expecting one or more collect matches
 		// after the last collect match. The server will show the best failing match.
 		boolean showExtraUnmatched;
+		
+		// If this flag is on, it means the user is expecting a maybe, or more specifically, one
+		// of the clauses in a maybe to be a match.
+		boolean showFailingMaybe;
 	}
 	
 	// Only one of these can exist for a given data line.
-	CollectState[] collectStates;
+	LineState[] lineStates;
 }

@@ -17,19 +17,19 @@ public class MatcherResultMaybeFailure extends MatcherResultFailed {
 	
 	private int startLineNumber;
 	
-	private List<MatcherResult> subClauseResults;
+	private List<MatcherResultPair> subClauseResults;
 
 	private MatcherResultFailed failedMatch;
 /**
  * 
  * @param lineNumberStart
- * @param subClauseResults
+ * @param allMatcherResults
  * @param failedMatch always an exception, as that is the only way @(maybe) can fail to match
  */
-	public MatcherResultMaybeFailure(int txrLineNumber, int startLineNumber, List<MatcherResult> subClauseResults, MatcherResultFailed failedMatch) {
+	public MatcherResultMaybeFailure(int txrLineNumber, int startLineNumber, List<MatcherResultPair> allMatcherResults, MatcherResultFailed failedMatch) {
 		this.txrLineNumber = txrLineNumber;
 		this.startLineNumber = startLineNumber;
-		this.subClauseResults = subClauseResults;
+		this.subClauseResults = allMatcherResults;
 		this.failedMatch = failedMatch;
 	}
 
@@ -45,9 +45,9 @@ public class MatcherResultMaybeFailure extends MatcherResultFailed {
 		// First show the prior sub-clauses, up to the one that threw the exception.
 		// To avoid clutter, don't show a mismatch if a sub-clause did not match
 		
-		for (MatcherResult subClauseResult : subClauseResults) {
-			if (subClauseResult.isSuccess()) {
-				subClauseResult.createControls(callback, indentation + 1);
+		for (MatcherResultPair subClauseResult : subClauseResults) {
+			if (subClauseResult.matcherResult.isSuccess()) {
+				subClauseResult.matcherResult.createControls(callback, indentation + 1);
 			}
 		}
 		

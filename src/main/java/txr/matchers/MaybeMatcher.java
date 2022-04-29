@@ -1,8 +1,11 @@
 package txr.matchers;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
+import txr.matchers.TxrState.LineState;
 import txr.parser.Expr;
 
 public class MaybeMatcher extends ParallelMatcher {
@@ -26,11 +29,13 @@ public class MaybeMatcher extends ParallelMatcher {
 	public MatcherResult match(LinesFromInputReader reader, MatchContext context) {
 		int start = reader.getCurrent();
 		int longest = start;
-		List<MatcherResult> allMatcherResults = new ArrayList<>();
+		List<MatcherResultPair> allMatcherResults = new ArrayList<>();
 		
 		for (Pair eachMatchSequence : content) {
 			MatchContext subContext = new MatchContext(context.bindings, context.state);
-			
+
+			LineState stateOfThisLine = null;
+
 			MatcherResult eachMatcherResult = eachMatchSequence.sequence.match(reader, subContext);
 			if (eachMatcherResult.isSuccess()) {
 				
@@ -49,9 +54,17 @@ public class MaybeMatcher extends ParallelMatcher {
 				if (eachMatcherResult.getFailedResult().isException()) {
 					return new MatcherResult(new MatcherResultMaybeFailure(txrLineNumber, start, allMatcherResults, eachMatcherResult.getFailedResult()));
 				}
+				
+				/*
+				 * By default, we don't show any lines for a failed @(maybe). However if the user selected
+				 * the action to indicate that they expected the @(maybe) content to match then we do show
+				 * the match attempts.
+				 */
+				// Get state for this maybe instance.
+				stateOfThisLine = context.getLineState(txrLineNumber + 1, start); // Is this.txrLineNumber actually a line index?
 			}
 			
-			allMatcherResults.add(eachMatcherResult);
+			allMatcherResults.add(new MatcherResultPair(eachMatchSequence.txrLineIndex, eachMatcherResult, stateOfThisLine));
 		}
 
 		reader.setCurrent(longest);

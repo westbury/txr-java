@@ -32,7 +32,8 @@ public class MatcherResult {
 	}
 	
 	public enum CommandId {
-		ExpectAnotherCollectMatch
+		ExpectAnotherCollectMatch,
+		ExpectOptionalToMatch
 	}
 	
 	public interface TxrCommandExecution {

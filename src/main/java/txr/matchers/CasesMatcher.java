@@ -29,7 +29,7 @@ public class CasesMatcher extends ParallelMatcher {
 		 * the cases matches, we are done. If none match, this matcher does not
 		 * match.
 		 */
-		List<MatcherResultCaseFailure.Pair> failedMatches = new ArrayList<>();
+		List<MatcherResultFailedPair> failedMatches = new ArrayList<>();
 		for (Pair eachAlternative : content) {
 			MatchContext subContext = new MatchContext(context.bindings, context.state);
 			
@@ -52,7 +52,7 @@ public class CasesMatcher extends ParallelMatcher {
 					// This matcher fails because we got all match failures followed by an assert failure
 					return new MatcherResult(new MatcherResultCaseException(txrLineNumber, startOfCases, failedMatches, failedAssert));
 				} else {
-					failedMatches.add(new MatcherResultCaseFailure.Pair(eachAlternative.txrLineIndex, eachResult.getFailedResult()));
+					failedMatches.add(new MatcherResultFailedPair(eachAlternative.txrLineIndex, eachResult.getFailedResult()));
 				}
 			}
 		}

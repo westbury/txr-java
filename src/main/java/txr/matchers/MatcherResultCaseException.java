@@ -3,7 +3,6 @@ package txr.matchers;
 import java.util.List;
 
 import txr.matchers.MatcherResult.IControlCallback;
-import txr.matchers.MatcherResultCaseFailure; // fixme
 
 public class MatcherResultCaseException extends MatcherResultException {
 
@@ -11,11 +10,11 @@ public class MatcherResultCaseException extends MatcherResultException {
 	
 	private int startLineNumber;
 
-	private List<MatcherResultCaseFailure.Pair> failedMatches;
+	private List<MatcherResultFailedPair> failedMatches;
 
 	private TxrAssertException failedAssert;
 
-	public MatcherResultCaseException(int txrLineNumber, int startLineNumber, List<MatcherResultCaseFailure.Pair> failedMatches, TxrAssertException failedAssert) {
+	public MatcherResultCaseException(int txrLineNumber, int startLineNumber, List<MatcherResultFailedPair> failedMatches, TxrAssertException failedAssert) {
 		this.txrLineNumber = txrLineNumber;
 		this.startLineNumber = startLineNumber;
 		this.failedMatches = failedMatches;

@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import txr.matchers.TxrState.CollectState;
+import txr.matchers.TxrState.LineState;
 import txr.parser.Expr;
 import txr.parser.Symbol;
 
@@ -30,7 +30,7 @@ public class CollectMatcher extends VerticalMatcher {
 	
 	MatchSequence last;
 	
-	int txrLineNumber;
+	int txrLineNumber; // Is this really index???
 	int untilTxrLineNumber;
 	private int txrEndLineIndex;
 	
@@ -108,18 +108,13 @@ public class CollectMatcher extends VerticalMatcher {
 	
 	@Override
 	public MatcherResult match(LinesFromInputReader reader, MatchContext context) {
+		int startOfCollect = reader.getCurrent();
+
 		// Get state for this collect instance.
-		boolean showExtraUnmatched = false;
-		if (context.state != null) {
-			Optional<CollectState> collectState = Arrays.stream(context.state.collectStates).filter(x -> true).findAny();
-			if (collectState.isPresent()) {
-				showExtraUnmatched = collectState.get().showExtraUnmatched;
-			}
-		}
+		LineState stateOfThisLine = context.getLineState(this.txrLineNumber + 1, startOfCollect);
 		
 		List<MatchResultsBase> nestedBindingsList = new ArrayList<>();
 
-		int startOfCollect = reader.getCurrent();
 		int untilOfCollect = 0;
 		int endOfCollect = 0;
 		List<MatcherResultSuccess> bodyMatchers = new ArrayList<>();
@@ -248,7 +243,7 @@ public class CollectMatcher extends VerticalMatcher {
 
 		endOfCollect = reader.getCurrent();
 
-		if (showExtraUnmatched) {
+		if (stateOfThisLine != null && stateOfThisLine.showExtraUnmatched) {
 			String message = "Missing collect";
 			return new MatcherResult(new MatcherResultCollectFailure(txrLineNumber, startOfCollect, message, bodyMatchers, lastMatch, untilMatch, best));
 		}

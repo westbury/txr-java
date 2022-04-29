@@ -9,7 +9,7 @@ import java.util.Scanner;
 import java.util.Stack;
 
 import txr.matchers.MatcherResult.TxrCommandExecution;
-import txr.matchers.TxrState.CollectState;
+import txr.matchers.TxrState.LineState;
 import txr.parser.AST;
 import txr.parser.Expr;
 import txr.parser.Line;
@@ -234,18 +234,34 @@ public class DocumentMatcher {
 			if (state == null) {
 				state = new TxrState() {};
 			}
+			Optional<LineState> lineState = Arrays.stream(state.lineStates).filter(x -> x.txrLineNumber == command.getTxrLineNumber() && x.dataLineNumber == command.getDataLineNumber()).findAny();
 			switch (command.getCommandId()) {
 				case ExpectAnotherCollectMatch:
-					Optional<CollectState> collectState = Arrays.stream(state.collectStates).filter(x -> true).findAny();
-					if (collectState.isPresent()) {
-						collectState.get().showExtraUnmatched = true;
+				{
+					if (lineState.isPresent()) {
+						lineState.get().showExtraUnmatched = true;
 					} else {
-						List<CollectState> asMutableList = new ArrayList<CollectState>(Arrays.asList(state.collectStates));
-						asMutableList.add(state.new CollectState(command.getTxrLineNumber(), command.getDataLineNumber(), true));
-						state.collectStates = asMutableList.toArray(new CollectState[0]);
-						
+						List<LineState> asMutableList = new ArrayList<LineState>(Arrays.asList(state.lineStates));
+						LineState newState = state.new LineState(command.getTxrLineNumber(), command.getDataLineNumber());
+						newState.showExtraUnmatched = true;
+						asMutableList.add(newState);
+						state.lineStates = asMutableList.toArray(new LineState[0]);
 					}
-					break;
+				}
+				break;
+				case ExpectOptionalToMatch:
+				{
+					if (lineState.isPresent()) {
+						lineState.get().showFailingMaybe = true;
+					} else {
+						List<LineState> asMutableList = new ArrayList<LineState>(Arrays.asList(state.lineStates));
+						LineState newState = state.new LineState(command.getTxrLineNumber(), command.getDataLineNumber());
+						newState.showFailingMaybe = true;
+						asMutableList.add(newState);
+						state.lineStates = asMutableList.toArray(new LineState[0]);
+					}
+				}
+				break;
 			}
 		}
 		
