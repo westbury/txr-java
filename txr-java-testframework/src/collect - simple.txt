@@ -1,0 +1,10 @@
+Introduction
+
+Title: Bananas
+Amount: $36
+
+Title: Oranges
+Amount: $42
+
+Conclusion
+Total: $78.00
