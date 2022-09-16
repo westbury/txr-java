@@ -1,21 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<application:Application xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:advanced="http://www.eclipse.org/ui/2010/UIModel/application/ui/advanced" xmlns:application="http://www.eclipse.org/ui/2010/UIModel/application" xmlns:basic="http://www.eclipse.org/ui/2010/UIModel/application/ui/basic" xmi:id="_c3AF0MjYEeSyMNYR5xypkQ" elementId="org.eclipse.e4.application" bindingContexts="_c3AF2cjYEeSyMNYR5xypkQ">
-  <children xsi:type="basic:TrimmedWindow" xmi:id="_c3AF0cjYEeSyMNYR5xypkQ" elementId="org.eclipse.e4.window.main" label="Application to Test the TXR Debugger" width="500" height="400">
+<application:Application xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:advanced="http://www.eclipse.org/ui/2010/UIModel/application/ui/advanced" xmlns:application="http://www.eclipse.org/ui/2010/UIModel/application" xmlns:basic="http://www.eclipse.org/ui/2010/UIModel/application/ui/basic" xmlns:menu="http://www.eclipse.org/ui/2010/UIModel/application/ui/menu" xmi:id="_c3AF0MjYEeSyMNYR5xypkQ" elementId="org.eclipse.e4.application" bindingContexts="_c3AF2cjYEeSyMNYR5xypkQ">
+  <children xsi:type="basic:TrimmedWindow" xmi:id="_c3AF0cjYEeSyMNYR5xypkQ" elementId="org.eclipse.e4.window.main" selectedElement="_htNOUDH_Ee2CRf4uthPrAA" label="Application to Test the TXR Debugger" width="500" height="400">
     <children xsi:type="advanced:PerspectiveStack" xmi:id="_htNOUDH_Ee2CRf4uthPrAA" elementId="txr-java-testframework.perspectivestack1">
       <children xsi:type="advanced:Perspective" xmi:id="_uimzcDH_Ee2CRf4uthPrAA" elementId="txr-java-testframework.perspective1">
         <children xsi:type="basic:PartSashContainer" xmi:id="_xqPSwDH_Ee2CRf4uthPrAA" elementId="txr-java-testframework.partsashcontainer.0" horizontal="true">
           <children xsi:type="basic:Part" xmi:id="_NGSYMDIAEe2CRf4uthPrAA" elementId="txr-java-testframework.part.test" contributionURI="bundleclass://txr-java-testframework/txr_java_testframework.TestCasesPart" label="TXR Test Cases"/>
           <children xsi:type="basic:Part" xmi:id="_HcpmUDOZEe23UNUgi9VVOg" elementId="txr-java-debug.debug-part" contributionURI="bundleclass://txr-java-debug/txr.debug.TxrDebugPart" label="TXR Debugger" tooltip="Part shows TXR and input data side-by-side, allowing debugging of the matcher">
-            <toolbar xmi:id="_3TBiMDRaEe2wWIkRNBobXg" elementId="txr-java-testframework.toolbar.1"/>
+            <handlers xmi:id="_U-j_gDWDEe2BZ-QKvELbFQ" elementId="txr-java-testframework.handler.03" contributionURI="bundleclass://txr-java-debug/txr.debug.PasteTxrHandler" command="_x0ihwDWCEe2BZ-QKvELbFQ"/>
+            <handlers xmi:id="_JMAFgDWFEe2BZ-QKvELbFQ" elementId="txr-java-testframework.handler.077" contributionURI="bundleclass://txr-java-debug/txr.debug.PasteTextHandler" command="_3lsBADWCEe2BZ-QKvELbFQ"/>
           </children>
         </children>
       </children>
     </children>
+    <mainMenu xmi:id="_Ugke8DViEe2BZ-QKvELbFQ" elementId="org.eclipse.ui.main.menu">
+      <children xsi:type="menu:Menu" xmi:id="_WOwlcDVqEe2BZ-QKvELbFQ" elementId="txr-java-testframework.menu.edit" label="Edit">
+        <children xsi:type="menu:HandledMenuItem" xmi:id="_rRPM0DWCEe2BZ-QKvELbFQ" elementId="txr-java-testframework.handledmenuitem.paste-txr" label="Paste Txr" iconURI="platform:/plugin/txr-java-testframework/icons/obj16/complete_status.png" tooltip="Paste the TXR to be debugged" command="_x0ihwDWCEe2BZ-QKvELbFQ"/>
+        <children xsi:type="menu:HandledMenuItem" xmi:id="_EL7v0DWDEe2BZ-QKvELbFQ" elementId="txr-java-testframework.handledmenuitem.paste-data" label="Paste Test Text" iconURI="platform:/plugin/txr-java-debug/icons/obj16/complete_status.png" tooltip="Paste Test Text" command="_3lsBADWCEe2BZ-QKvELbFQ"/>
+      </children>
+    </mainMenu>
   </children>
   <rootContext xmi:id="_c3AF2cjYEeSyMNYR5xypkQ" elementId="org.eclipse.ui.contexts.dialogAndWindow" name="In Dialog and Windows">
     <children xmi:id="_c3AF2sjYEeSyMNYR5xypkQ" elementId="org.eclipse.ui.contexts.window" name="In Windows"/>
     <children xmi:id="_c3AF28jYEeSyMNYR5xypkQ" elementId="org.eclipse.ui.contexts.dialog" name="In Dialogs"/>
   </rootContext>
+  <commands xmi:id="_x0ihwDWCEe2BZ-QKvELbFQ" elementId="txr-java-testframework.command.paste-txr" commandName="Paste TXR" description=""/>
+  <commands xmi:id="_3lsBADWCEe2BZ-QKvELbFQ" elementId="txr-java-testframework.command.paste-data" commandName="Paste input data"/>
   <addons xmi:id="_c3AF0sjYEeSyMNYR5xypkQ" elementId="org.eclipse.e4.core.commands.service" contributionURI="bundleclass://org.eclipse.e4.core.commands/org.eclipse.e4.core.commands.CommandServiceAddon"/>
   <addons xmi:id="_c3AF08jYEeSyMNYR5xypkQ" elementId="org.eclipse.e4.ui.contexts.service" contributionURI="bundleclass://org.eclipse.e4.ui.services/org.eclipse.e4.ui.services.ContextServiceAddon"/>
   <addons xmi:id="_c3AF1MjYEeSyMNYR5xypkQ" elementId="org.eclipse.e4.ui.bindings.service" contributionURI="bundleclass://org.eclipse.e4.ui.bindings/org.eclipse.e4.ui.bindings.BindingServiceAddon"/>

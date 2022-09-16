@@ -8,7 +8,7 @@ import org.eclipse.swt.widgets.Shell;
 public class PasteTextHandler {
 
 	@Execute
-	   public static void execute(Shell shell, MPart part) {
+	public static void execute(Shell shell, MPart part) {
 		try {
 			Object txrDebugPart = part.getObject();
 			((TxrDebugPart)txrDebugPart).pasteData();

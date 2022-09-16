@@ -70,12 +70,6 @@ public class TxrDebugPart {
 
 	public static String ID = "txr.debug.TxrDebugPart";
 
-	private MDirectToolItem pasteTxrAction;
-
-	private MDirectToolItem pasteTextAction;
-
-	private Image errorImage;
-
 	private String txr = "Introduction\n"
 			+ "\n"
 			+ "@(collect)\n"
@@ -127,37 +121,7 @@ public class TxrDebugPart {
 	private int currentDataLineIndex;
 
 	@Inject
-	public TxrDebugPart(Composite parent, MPart part) {
-		MMenuFactory menuFactory = MMenuFactory.INSTANCE;
-		
-		pasteTxrAction = menuFactory.createDirectToolItem();
-		pasteTxrAction.setLabel("Paste Txr");
-		pasteTxrAction.setTooltip("Paste the TXR to be debugged");
-		pasteTxrAction.setIconURI("platform:/plugin/txr-java-debug/"+ "icons/obj16/complete_status.png"); // ISharedImages.IMG_TOOL_PASTE
-		pasteTxrAction.setContributionURI("bundleclass://txr-java-debug/" + PasteTxrHandler.class.getName());
-		
-		pasteTextAction = menuFactory.createDirectToolItem();
-		pasteTextAction.setLabel("Paste Test Text");
-		pasteTextAction.setTooltip("Paste Test Text");
-		pasteTextAction.setIconURI("platform:/plugin/txr-java-debug/"+ "icons/obj16/complete_status.png"); // ISharedImages.IMG_TOOL_PASTE
-		pasteTextAction.setContributionURI("bundleclass://txr-java-debug/" + PasteTextHandler.class.getName());
-
-		MToolBar toolBar = menuFactory.createToolBar();
-		List<MToolBarElement> children = toolBar.getChildren();
-		children.add(pasteTxrAction);
-		children.add(pasteTextAction);
-		
-		part.setToolbar(toolBar);
-		
-//		Object p = part.getParent();
-//		if (p instanceof MPartSashContainer) {
-//			((MPartSashContainer)p).getParent()..setToolbar(toolBar);
-//		}
-		// Load the error indicator
-//		URL installURL = Activator.getDefault().getBundle().getEntry("/icons/error.gif");
-//		errorImage = ImageDescriptor.createFromURL(installURL).createImage();
-		
-		
+	public TxrDebugPart(Composite parent) {
 		this.createPartControl(parent);
 	}
 
@@ -177,7 +141,7 @@ public class TxrDebugPart {
 //		//		filter.saveState(memento.createChild("filter"));
 //	}
 
-	public void createContextMenuForTxrLine(final Text control, int txrLineNumber, int dataLineNumber, TxrAction[] actions) {
+	private void createContextMenuForTxrLine(final Text control, int txrLineNumber, int dataLineNumber, TxrAction[] actions) {
 	    Menu menu = new Menu(control);
 
 	    MenuItem pasteItem = new MenuItem(menu, SWT.PUSH);
@@ -310,7 +274,7 @@ public class TxrDebugPart {
 		return composite;
 	}
 
-	void pasteTxr() {
+	public void pasteTxr() {
 		txr = getTextFromClipboard();
 		this.parseTxr();
 		this.runMatcher(null);
@@ -329,7 +293,7 @@ public class TxrDebugPart {
 		sc.getParent().layout(true);
 	}
 
-	void pasteData() {
+	public void pasteData() {
 		testData = getTextFromClipboard().split("\n");
 		this.runMatcher(null);
 
@@ -1104,18 +1068,6 @@ public class TxrDebugPart {
 
 		return testDataComposite;
 	}
-
-//	@Override
-//	public void setFocus() {
-//		// TODO Auto-generated method stub
-//
-//	}
-//
-//	@Override
-//	public void dispose() {
-//		super.dispose();
-//		errorImage.dispose();
-//	}
 
 	// This is used for programmatic opening of view
 	public void setTxrAndData(URL resource, String[] lines) {

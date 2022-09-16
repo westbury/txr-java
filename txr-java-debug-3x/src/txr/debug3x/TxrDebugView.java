@@ -170,8 +170,7 @@ public class TxrDebugView extends ViewPart {
 
 	@Override
 	public void createPartControl(Composite parent) {
-		MPart part = this.getViewSite().getService(MPart.class);
-		pojoView = new TxrDebugPart(parent, part);
+		pojoView = new TxrDebugPart(parent);
 
 		contributeToActionBars();
 	}
