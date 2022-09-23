@@ -17,12 +17,13 @@ public class TestCase {
 	
 	private String inputDataFileName;
 	
-	private enum Status { PASSED, FAILED, NOT_RUN };
+	public enum Status { PASSED, FAILED, NOT_RUN };
+	
 	TestCase(String label, String txrFileName, String inputDataFileName) {
 		this.label = label;
 		this.txrFileName = txrFileName;
 		this.inputDataFileName = inputDataFileName;
-		this.status = Status.PASSED;
+		this.status = Status.NOT_RUN;
 	};
 	private Status status;
 	
@@ -58,5 +59,9 @@ public class TestCase {
 		default:
 			return null;
 		}
+	}
+
+	public void setStatus(Status status) {
+		this.status = status;
 	}
 }
