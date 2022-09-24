@@ -29,17 +29,20 @@ public class MatcherResult {
 	public interface TxrAction {
 		CommandId getId();
 		String getLabel();
+		boolean isClearingCommand();
 	}
 	
 	public enum CommandId {
 		ExpectAnotherCollectMatch,
-		ExpectOptionalToMatch
+		ExpectOptionalToMatch,
+		ExpectNoneClauseToFail
 	}
 	
 	public interface TxrCommandExecution {
 		CommandId getCommandId();
 		int getTxrLineNumber();
 		int getDataLineNumber();
+		boolean isClearingCommand();
 	}
 	
 	public interface IControlCallback {
@@ -63,6 +66,12 @@ public class MatcherResult {
 		 * Currently, this is called only for an @(assert) that failed.
 		 */
 		void createDirectiveWithError(int txrLineNumber, int startLine, int indentation);
+		
+		/**
+		 * Final call. This is made only if there is no match (or if user forced a condition that results
+		 * in no match)
+		 */
+		void showRemainingLines();
 	}
 	
 	public void createControls(IControlCallback callback) {
@@ -75,6 +84,17 @@ public class MatcherResult {
 		}
 		if (failed != null) {
 			failed.createControls(callback, indentation);
+			callback.showRemainingLines();
 		}
+	}
+	
+	public String toString() {
+		if (success != null && failed == null) {
+			return "Success: " + success.toString();
+		}
+		if (success == null && failed != null) {
+			return "Failed: " + failed.toString();
+		}
+		return "bad";
 	}
 }

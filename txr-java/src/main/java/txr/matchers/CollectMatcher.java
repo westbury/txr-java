@@ -206,7 +206,7 @@ public class CollectMatcher extends VerticalMatcher {
 				// An assert failure occurred inside the collect.
 				// We return an exception result that contains all the prior collect matches
 				// and this exception result
-				return new MatcherResult(new MatcherResultCollectException(txrLineNumber, startOfCollect, bodyMatchers, lastMatch, untilMatch, bodyMatcherResult.getFailedResult()));
+				return new MatcherResult(new MatcherResultCollectException(txrLineNumber, startOfCollect, bodyMatchers, lastMatch, untilMatch, bodyMatcherResult.getFailedResult(), context));
 			} else {
 				/*
 				 * The sub-sequence did not match.  Check only that
@@ -245,7 +245,9 @@ public class CollectMatcher extends VerticalMatcher {
 
 		if (stateOfThisLine != null && stateOfThisLine.showExtraUnmatched) {
 			String message = "Missing collect";
-			return new MatcherResult(new MatcherResultCollectFailure(txrLineNumber, startOfCollect, message, bodyMatchers, lastMatch, untilMatch, best));
+			// Don't fail, always return an exception when a user action indicates an expected match.
+			// A failure will result in back-tracking and re-matching which we don't want.
+			return new MatcherResult(new MatcherResultCollectException(txrLineNumber, startOfCollect, bodyMatchers, lastMatch, untilMatch, best, context));
 		}
 		
 		if (mintimes != null) {
@@ -256,7 +258,7 @@ public class CollectMatcher extends VerticalMatcher {
 		}
 
 		context.bindings.addList("collect", nestedBindingsList);
-		return new MatcherResult(new MatcherResultCollectSuccess(txrLineNumber, startOfCollect, untilTxrLineNumber, untilOfCollect, txrEndLineIndex, endOfCollect, bodyMatchers, lastMatch, untilMatch));
+		return new MatcherResult(new MatcherResultCollectSuccess(txrLineNumber, startOfCollect, untilTxrLineNumber, untilOfCollect, txrEndLineIndex, endOfCollect, bodyMatchers, lastMatch, untilMatch, context));
 	}
 
 	public String toString() {

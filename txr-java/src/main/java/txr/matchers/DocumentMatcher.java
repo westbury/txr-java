@@ -109,6 +109,13 @@ public class DocumentMatcher {
 							processor = maybeMatcher;
 							break;
 
+						case "none":
+							NoneMatcher noneMatcher = new NoneMatcher(lineIndex, expr);
+							processor.addNextMatcherInMatchSequence(noneMatcher);
+							processorStack.push(processor);
+							processor = noneMatcher;
+							break;
+
 						case "skip":
 							SkipMatcher skipMatcher = new SkipMatcher(lineIndex, expr);
 							processor.addNextMatcherInMatchSequence(skipMatcher);
@@ -238,27 +245,54 @@ public class DocumentMatcher {
 			switch (command.getCommandId()) {
 				case ExpectAnotherCollectMatch:
 				{
-					if (lineState.isPresent()) {
-						lineState.get().showExtraUnmatched = true;
+					if (!command.isClearingCommand()) {
+						if (lineState.isPresent()) {
+							lineState.get().showExtraUnmatched = true;
+						} else {
+							List<LineState> asMutableList = new ArrayList<LineState>(Arrays.asList(state.lineStates));
+							LineState newState = state.new LineState(command.getTxrLineNumber(), command.getDataLineNumber());
+							newState.showExtraUnmatched = true;
+							asMutableList.add(newState);
+							state.lineStates = asMutableList.toArray(new LineState[0]);
+						}
 					} else {
-						List<LineState> asMutableList = new ArrayList<LineState>(Arrays.asList(state.lineStates));
-						LineState newState = state.new LineState(command.getTxrLineNumber(), command.getDataLineNumber());
-						newState.showExtraUnmatched = true;
-						asMutableList.add(newState);
-						state.lineStates = asMutableList.toArray(new LineState[0]);
+						if (lineState.isPresent()) {
+							lineState.get().showExtraUnmatched = false;
+						}
 					}
 				}
 				break;
 				case ExpectOptionalToMatch:
 				{
-					if (lineState.isPresent()) {
-						lineState.get().showFailingMaybe = true;
+					if (!command.isClearingCommand()) {
+						if (lineState.isPresent()) {
+							lineState.get().showFailingMaybe = true;
+						} else {
+							List<LineState> asMutableList = new ArrayList<LineState>(Arrays.asList(state.lineStates));
+							LineState newState = state.new LineState(command.getTxrLineNumber(), command.getDataLineNumber());
+							newState.showFailingMaybe = true;
+							asMutableList.add(newState);
+							state.lineStates = asMutableList.toArray(new LineState[0]);
+						}
 					} else {
-						List<LineState> asMutableList = new ArrayList<LineState>(Arrays.asList(state.lineStates));
-						LineState newState = state.new LineState(command.getTxrLineNumber(), command.getDataLineNumber());
-						newState.showFailingMaybe = true;
-						asMutableList.add(newState);
-						state.lineStates = asMutableList.toArray(new LineState[0]);
+						lineState.get().showFailingMaybe = false;
+					}
+				}
+				break;
+				case ExpectNoneClauseToFail:
+				{
+					if (!command.isClearingCommand()) {
+						if (lineState.isPresent()) {
+							lineState.get().showAllFailuresInNone = true;
+						} else {
+							List<LineState> asMutableList = new ArrayList<LineState>(Arrays.asList(state.lineStates));
+							LineState newState = state.new LineState(command.getTxrLineNumber(), command.getDataLineNumber());
+							newState.showAllFailuresInNone = true;
+							asMutableList.add(newState);
+							state.lineStates = asMutableList.toArray(new LineState[0]);
+						}
+					} else {
+						lineState.get().showAllFailuresInNone = false;
 					}
 				}
 				break;
@@ -273,6 +307,7 @@ public class DocumentMatcher {
 		
 		// Can this be cleaned up a bit?  Perhaps bindings should be part
 		// of MatcherResult?
+		
 		return new MatchPair(matched, results, state);
 	}
 

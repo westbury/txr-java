@@ -1,13 +1,7 @@
 package txr_java_testframework;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.Collection;
-import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -98,8 +92,10 @@ public class TestCasesPart {
 		tableViewer.setLabelProvider(new TestCaseLabelProvider());
 
 		TestCase[] allTestCases = {
-				new TestCase("collect - simple test", "collect - simple.txr", "collect - simple.txt"),
-				new TestCase("collect - with a failing collect", "collect - simple.txr", "collect - one fails.txt")
+                new TestCase("collect - simple test", "collect - simple.txr", "collect - simple.txt"),
+				new TestCase("collect - with a failing collect", "collect - simple.txr", "collect - one fails.txt"),
+				new TestCase("none - with a passing sub-clause", "none - simple.txr", "none - fails.txt"),
+				new TestCase("none - with all sub-clauses failing", "none - simple.txr", "none - passes.txt")
 		};
 
 		for (TestCase testCase : allTestCases) {

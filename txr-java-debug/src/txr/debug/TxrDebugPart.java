@@ -159,7 +159,7 @@ public class TxrDebugPart {
 		    item.addListener(SWT.Selection, new Listener() {
 		        @Override
 		        public void handleEvent(Event event) {
-		            executeDebugAction(action.getId(), txrLineNumber, dataLineNumber);
+		            executeDebugAction(action.getId(), action.isClearingCommand() , txrLineNumber, dataLineNumber);
 		        }
 		    });
 	    }
@@ -167,13 +167,18 @@ public class TxrDebugPart {
 	    control.setMenu(menu); 
 	}    
 	
-	private void executeDebugAction(CommandId commandId, int txrLineNumber, int dataLineNumber) {
+	private void executeDebugAction(CommandId commandId, boolean isClearingCommand, int txrLineNumber, int dataLineNumber) {
 		System.out.println(commandId + ", " + txrLineNumber + ", " + dataLineNumber);
 
 		TxrCommandExecution command = new TxrCommandExecution() {
 			@Override
 			public CommandId getCommandId() {
 				return commandId;
+			}
+
+			@Override
+			public boolean isClearingCommand() {
+				return isClearingCommand;
 			}
 
 			@Override

@@ -15,7 +15,7 @@ public abstract class MatcherResultFailed {
 	/**
 	 * Although the matcher failed, we want to have an indication of how far
 	 * the matcher succeeded.  Did the matcher fail on the first line or did it
-	 * fail way down.
+	 * fail way down?
 	 * 
 	 * @return a number, I don't know what this number is exactly yet, but the bigger it
 	 * 		is, the more that matched

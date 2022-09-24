@@ -5,6 +5,7 @@ import java.util.List;
 import txr.matchers.MatcherResult.CommandId;
 import txr.matchers.MatcherResult.IControlCallback;
 import txr.matchers.MatcherResult.TxrAction;
+import txr.matchers.TxrState.LineState;
 
 public class MatcherResultCollectSuccess extends MatcherResultSuccess {
 
@@ -17,9 +18,10 @@ public class MatcherResultCollectSuccess extends MatcherResultSuccess {
 	private List<MatcherResultSuccess> bodyMatchers;
 	private MatcherResultSuccess lastMatch;
 	private MatcherResultSuccess untilMatch;
+	private MatchContext context;
 
 	public MatcherResultCollectSuccess(int txrLineNumber, int startLine, int untilTxrLineNumber, int untilLine, int endTxrLineNumber, int endLine, List<MatcherResultSuccess> bodyMatchers, MatcherResultSuccess lastMatch,
-			MatcherResultSuccess untilMatch) {
+			MatcherResultSuccess untilMatch, MatchContext context) {
 		this.txrLineNumber = txrLineNumber;
 		this.startLine = startLine;
 		this.untilTxrLineNumber = untilTxrLineNumber;
@@ -29,10 +31,18 @@ public class MatcherResultCollectSuccess extends MatcherResultSuccess {
 		this.bodyMatchers = bodyMatchers;
 		this.lastMatch = lastMatch;
 		this.untilMatch = untilMatch;
+		this.context = context;
 	}
 
 	@Override
 	public void createControls(IControlCallback callback, int indentation) {
+		
+		// Get state for this collect instance.
+		LineState stateOfThisLine = this.context.getLineState(this.txrLineNumber + 1, startLine);
+
+		boolean showExtraUnmatched = stateOfThisLine != null && stateOfThisLine.showExtraUnmatched;
+
+		assert !showExtraUnmatched; // this would be an 'exception' instance, not a 'success' instance, if showExtraUnmatched set
 		TxrAction[] actions = {
 			new TxrAction() {
 				@Override
@@ -42,6 +52,10 @@ public class MatcherResultCollectSuccess extends MatcherResultSuccess {
 				@Override
 				public CommandId getId() {
 					return CommandId.ExpectAnotherCollectMatch;
+				}
+				@Override
+				public boolean isClearingCommand() {
+					return false;
 				}
 			}
 		};

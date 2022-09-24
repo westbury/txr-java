@@ -14,6 +14,7 @@ public class TxrState {
 			this.dataLineNumber = dataLineNumber;
 			this.showExtraUnmatched = false;
 			this.showFailingMaybe = false;
+			this.showAllFailuresInNone = false;
 			
 		}
 		int txrLineNumber;
@@ -26,6 +27,10 @@ public class TxrState {
 		// If this flag is on, it means the user is expecting a maybe, or more specifically, one
 		// of the clauses in a maybe to be a match.
 		boolean showFailingMaybe;
+		
+		// If this flag is on, it means the user is expecting a matching @(none) to fail to match. In order words,
+		// the user expects one of the sub-clauses to match when in fact none matched.
+		boolean showAllFailuresInNone;
 	}
 	
 	// Only one of these can exist for a given data line.
