@@ -1,18 +1,28 @@
 package txr_java_testframework;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
+import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.e4.ui.di.Focus;
 import org.eclipse.e4.ui.di.Persist;
 import org.eclipse.e4.ui.model.application.ui.MDirtyable;
 import org.eclipse.e4.ui.model.application.ui.basic.MPart;
 import org.eclipse.e4.ui.workbench.modeling.EPartService;
 import org.eclipse.e4.ui.workbench.modeling.EPartService.PartState;
-import org.eclipse.jface.viewers.TableViewer;
+import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -26,6 +36,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Text;
+import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.constructor.Constructor;
 
 import txr.debug.TxrDebugPart;
 import txr.matchers.DocumentMatcher;
@@ -37,7 +49,7 @@ import txr.parser.TxrErrorInDocumentException;
 public class TestCasesPart {
 
 	private Text txtInput;
-	private TableViewer tableViewer;
+	private TreeViewer treeViewer;
 
 	@Inject
 	private MDirtyable dirty;
@@ -52,8 +64,8 @@ public class TestCasesPart {
 		txtInput = createTextInput(parent);
 		txtInput.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
-		tableViewer = createTableViewer(parent);
-		tableViewer.getTable().setLayoutData(new GridData(GridData.FILL_BOTH));
+		treeViewer = createTableViewer(parent);
+		treeViewer.getTree().setLayoutData(new GridData(GridData.FILL_BOTH));
 
 		Control buttonArea = createButtonArea(parent);
 	}
@@ -70,11 +82,11 @@ public class TestCasesPart {
 				MPart p = partService.showPart("txr-java-debug.debug-part", PartState.VISIBLE);
 				TxrDebugPart debugPart = (TxrDebugPart)p.getObject();
 
-				Object s = tableViewer.getStructuredSelection().getFirstElement();
+				Object s = treeViewer.getStructuredSelection().getFirstElement();
 				if (s instanceof TestCase) {
 					TestCase testCase = (TestCase)s;
 					try {
-						debugPart.setTxrAndData(testCase.getTxrResource(), testCase.getInputData());
+						debugPart.setTxrAndData(testCase.getTxrTestCase().getTxrResource().toURI().toURL(), testCase.getInputData());
 					} catch (IOException e1) {
 						// TODO Auto-generated catch block
 						e1.printStackTrace();
@@ -86,41 +98,67 @@ public class TestCasesPart {
 		return composite;
 	}
 
-	private TableViewer createTableViewer(Composite parent) {
-		TableViewer tableViewer = new TableViewer(parent);
+	private TreeViewer createTableViewer(Composite parent) {
+		TreeViewer tableViewer = new TreeViewer(parent);
 
 		tableViewer.setLabelProvider(new TestCaseLabelProvider());
+		tableViewer.setContentProvider(new TestCaseContentProvider());
 
-		TestCase[] allTestCases = {
-                new TestCase("collect - simple test", "collect - simple.txr", "collect - simple.txt"),
-				new TestCase("collect - with a failing collect", "collect - simple.txr", "collect - one fails.txt"),
-				new TestCase("none - with a passing sub-clause", "none - simple.txr", "none - fails.txt"),
-				new TestCase("none - with all sub-clauses failing", "none - simple.txr", "none - passes.txt")
-		};
+		List<TxrTestCase> allTestCases = new ArrayList<>();
 
-		for (TestCase testCase : allTestCases) {
+		Yaml yaml = new Yaml(new Constructor(TestConfiguration.class));
+
+		ClassLoader classLoader = getClass().getClassLoader();
+		URL yamlFileUrl = classLoader.getResource("tests.yaml");
+		
+		// If the resource is a bundleresource then this will copy the directory to the file system first.
+		// This does mean that relative paths in this bundle's tests.yaml cannot go outside the root directory,
+		// i.e. cannot start with '../'.
+		try {
+			URI yamlFileAsFileUri = FileLocator.toFileURL(yamlFileUrl).toURI();
+			File yamlFile = new File(yamlFileAsFileUri);
+			processYaml(yaml, yamlFile, allTestCases);
+		} catch (URISyntaxException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		} catch (IOException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
+
+		File home = new File(System.getProperty("user.home"));
+		if (home != null && home.exists()) {
+			// Mac does not like directory starting with '.'
+			File userConfigFile = new File(home, "Documents/txrtester/tests.yaml");
+			if (userConfigFile.exists()) {
+				processYaml(yaml, userConfigFile, allTestCases);
+			}
+		}
+
+		for (TxrTestCase txrTestCase : allTestCases) {
 			new Thread() {
 				@Override
 				public void run() {
-
-					try (InputStream txrInputStream = testCase.getTxrResource().openStream()) {
-						String[] testData = testCase.getInputData();
+					try (InputStream txrInputStream = new FileInputStream(txrTestCase.getTxrResource())) {
 						DocumentMatcher matcher = new DocumentMatcher(txrInputStream, "UTF-8");
+						for (TestCase testCase : txrTestCase.getInputDataTestCases()) {
+							String[] testData = testCase.getInputData();
 
-						TxrState state = null;
-						TxrCommandExecution command = null;
-						MatchPair results = matcher.process2(testData, state, command);
+							TxrState state = null;
+							TxrCommandExecution command = null;
+							MatchPair results = matcher.process2(testData, state, command);
 
-						testCase.setStatus(results.matcherResults.isSuccess() ? TestCase.Status.PASSED : TestCase.Status.FAILED);
+							testCase.setStatus(results.matcherResults.isSuccess() ? TestCase.Status.PASSED : TestCase.Status.FAILED);
 
-						Display.getDefault().asyncExec(new Runnable() {
-							@Override
-							public void run() {
-								if (!tableViewer.getTable().isDisposed()) {
-									tableViewer.refresh(testCase);
+							Display.getDefault().asyncExec(new Runnable() {
+								@Override
+								public void run() {
+									if (!tableViewer.getTree().isDisposed()) {
+										tableViewer.refresh(testCase);
+									}
 								}
-							}
-						});
+							});
+						}
 					} catch (IOException e) {
 						e.printStackTrace();
 						throw new RuntimeException(e);
@@ -130,11 +168,56 @@ public class TestCasesPart {
 					}
 				}
 			}.start();
-
-			tableViewer.add(testCase);
 		}
 
+		tableViewer.setInput(allTestCases);
+
 		return tableViewer;
+	}
+
+	private void processYaml(Yaml yaml, File yamlFile, List<TxrTestCase> allTestCases) {
+		try (InputStream inputStream = yamlFile.toURI().toURL().openStream()) {
+			TestConfiguration configuration = yaml.load(inputStream);
+			
+			File rootDirectory = yamlFile.getParentFile();
+			configuration.setRoot(rootDirectory);
+			
+			for (TxrTestCase txrTestCase : configuration.txrFiles) {
+				txrTestCase.setParents(configuration);
+			}
+
+			for (String redirect : configuration.redirects) {
+				File secondaryYamlFile = new File(redirect);
+				if (!secondaryYamlFile.exists()) {
+					throw new RuntimeException("Cannot find file: " + secondaryYamlFile);
+				}
+
+				processYaml(yaml, secondaryYamlFile, allTestCases);
+			}
+
+			// Having processed the redirects, it may be that we are adding tests for TXR files
+			// that have already been configured. Search for this based on the absolute path to the TXR file.
+			for (TxrTestCase txrTestCase1 : configuration.txrFiles) {
+				Optional<TxrTestCase> match = allTestCases.stream().filter(txrTestCase -> {
+					try {
+						return txrTestCase.getTxrResource().toURI().toURL().sameFile(txrTestCase1.getTxrResource().toURI().toURL());
+					} catch (MalformedURLException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+						return false;
+					}
+				}).findFirst();
+				if (match.isPresent()) {
+					match.get().appendFrom(txrTestCase1);
+				} else {
+					allTestCases.add(txrTestCase1);
+				}
+			}
+		}
+		catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	private Text createTextInput(Composite parent) {
@@ -151,7 +234,7 @@ public class TestCasesPart {
 
 	@Focus
 	public void setFocus() {
-		tableViewer.getTable().setFocus();
+		treeViewer.getTree().setFocus();
 	}
 
 	@Persist

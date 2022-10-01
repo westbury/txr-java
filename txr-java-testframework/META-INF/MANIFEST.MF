@@ -20,3 +20,5 @@ Bundle-RequiredExecutionEnvironment: JavaSE-11
 Automatic-Module-Name: txr.java.testframework
 Import-Package: javax.annotation;version="0.0.0"
 Bundle-ActivationPolicy: lazy
+Bundle-ClassPath: lib/snakeyaml-1.33.jar,
+ .

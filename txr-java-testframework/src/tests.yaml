@@ -1,0 +1,13 @@
+txrFiles:
+   -
+      txrFile: "collect - simple.txr"
+      description: "collect - simple test"
+      dataFiles:
+         - { dataFile: "collect - simple.txt", description: "all collects matching" }
+         - { dataFile: "collect - one fails.txt", description: "test one collect failing" }
+   -
+      txrFile: "none - simple.txr"
+      description: "none - simple test"
+      dataFiles:
+         - { dataFile: "none - fails.txt", description: "none - with a passing sub-clause" }
+         - { dataFile: "none - passes.txt", description: "none - with all sub-clauses failing" }

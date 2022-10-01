@@ -1,8 +1,9 @@
 package txr_java_testframework;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -11,36 +12,43 @@ import org.eclipse.swt.graphics.Image;
 
 public class TestCase {
 
-	private String label;
+	private String dataFile;
 	
-	private String txrFileName;
-	
-	private String inputDataFileName;
+	public String description;
 	
 	public enum Status { PASSED, FAILED, NOT_RUN };
 	
-	TestCase(String label, String txrFileName, String inputDataFileName) {
-		this.label = label;
-		this.txrFileName = txrFileName;
-		this.inputDataFileName = inputDataFileName;
-		this.status = Status.NOT_RUN;
-	};
 	private Status status;
+
+	private TxrTestCase txrTestCase;
+
+	private File resolvedDataFile;
 	
-	public String getLabel() {
-		return label;
+	/** constructor for Snake */
+	public TestCase() {
+	}
+	
+	/** constructor for discovered tests */
+	public TestCase(TxrTestCase txrTestCase, File dataFile) {
+		this.dataFile = null;
+		this.resolvedDataFile = dataFile;
+		this.description = dataFile.getPath();
+		this.status = Status.NOT_RUN;
+		this.txrTestCase = txrTestCase;
 	}
 
-	public URL getTxrResource() {
-		ClassLoader classLoader = getClass().getClassLoader();
-		return classLoader.getResource(txrFileName);
+	public void setDataFile(String dataFile) {
+		this.dataFile = dataFile;
+		this.status = Status.NOT_RUN;
+	}
+	
+	public String getLabel() {
+		return description;
 	}
 
 	public String[] getInputData() throws IOException {
-		ClassLoader classLoader = getClass().getClassLoader();
-		URL url = classLoader.getResource(inputDataFileName);
 		List<String> result = new ArrayList<>();
-		try (InputStream inputStream = url.openStream();
+		try (InputStream inputStream = new FileInputStream(resolvedDataFile);
 				Scanner scanner = new Scanner(inputStream)) {
 			while (scanner.hasNextLine()) {
 				String line = scanner.nextLine();
@@ -63,5 +71,24 @@ public class TestCase {
 
 	public void setStatus(Status status) {
 		this.status = status;
+	}
+
+	/** This must be called immediately after SnakeYaml has loaded the yaml contents, before anything else is called
+	 * 
+	 *  This property is required so that a test can be run against a selected TestCase outside the context of a TxrTestCase object.
+	 *  This is the TxrTestCase against which tests are to be run. Do not use this TxrTestCase object when resolving relative paths because
+	 *  it may be the wrong one.
+	 */
+	public void setTxrTestCase(TxrTestCase txrTestCase) {
+		this.txrTestCase = txrTestCase;
+	}
+	
+	public TxrTestCase getTxrTestCase() {
+		return txrTestCase;
+	}
+
+	/** This must be called immediately after SnakeYaml has loaded the yaml contents, before anything else is called */
+	public void resolve(TestConfiguration testConfiguration) {
+		resolvedDataFile = testConfiguration.resolve(dataFile);
 	}
 }

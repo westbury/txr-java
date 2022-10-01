@@ -9,6 +9,9 @@ public class TestCaseLabelProvider extends LabelProvider implements
 
 	@Override
 	public Image getImage(Object element) {
+		if (element instanceof TxrTestCase) {
+			return ((TxrTestCase) element).getImage();
+		}
 		if (element instanceof TestCase) {
 			return ((TestCase) element).getImage();
 		}
@@ -17,6 +20,9 @@ public class TestCaseLabelProvider extends LabelProvider implements
 
 	@Override
 	public String getText(Object element) {
+		if (element instanceof TxrTestCase) {
+			return ((TxrTestCase) element).description;
+		}
 		if (element instanceof TestCase) {
 			return ((TestCase) element).getLabel();
 		}
