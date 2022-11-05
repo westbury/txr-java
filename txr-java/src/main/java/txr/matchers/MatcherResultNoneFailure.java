@@ -5,15 +5,10 @@ import txr.matchers.MatcherResult.TxrAction;
 
 public class MatcherResultNoneFailure extends MatcherResultFailed {
 
-	private int txrLineNumber;
-	
-	private int startLineNumber;
-
 	private MatcherResultSuccessPair successfulResult;
 
 	public MatcherResultNoneFailure(int txrLineNumber, int startLineNumber, MatcherResultSuccessPair successfulResult) {
-		this.txrLineNumber = txrLineNumber;
-		this.startLineNumber = startLineNumber;
+		super(txrLineNumber, startLineNumber);
 		this.successfulResult = successfulResult;
 	}
 

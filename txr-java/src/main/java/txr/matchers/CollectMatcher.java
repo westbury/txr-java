@@ -24,18 +24,19 @@ public class CollectMatcher extends VerticalMatcher {
 	};
 	BlockType where = BlockType.BODY;
 	
-	MatchSequence body = new MatchSequence();
+	MatchSequence body;
 	
 	MatchSequence until;
 	
 	MatchSequence last;
 	
 	int txrLineNumber; // Is this really index???
-	int untilTxrLineNumber;
+	int untilTxrLineNumber; // TODO this may be no longer needed. We can get it from 'until' sequence
 	private int txrEndLineIndex;
 	
 	public CollectMatcher(int txrLineNumber, Expr expr) {
 		this.txrLineNumber = txrLineNumber;
+		body = new MatchSequence(txrLineNumber);
 		
 		KeywordValues keywordValues = new KeywordValues(expr);
 		
@@ -91,7 +92,7 @@ public class CollectMatcher extends VerticalMatcher {
 				}
 				where = BlockType.UNTIL;
 				untilTxrLineNumber = txrLineIndex;
-				until = new MatchSequence();
+				until = new MatchSequence(txrLineIndex);
 				break;
 				
 			case "last":
@@ -99,7 +100,7 @@ public class CollectMatcher extends VerticalMatcher {
 					throw new RuntimeException("Can't have LAST directive if already in an UNTIL or LAST block in the same COLLECT.");
 				}
 				where = BlockType.LAST;
-				last = new MatchSequence();
+				last = new MatchSequence(txrLineIndex);
 				break;
 			default:
 				throw new RuntimeException("Unknown directive or unexpected at this location.");

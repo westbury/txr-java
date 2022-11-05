@@ -12,7 +12,8 @@ public class MatcherResultSequenceException extends MatcherResultException {
 
 	private TxrAssertException failedAssert;
 
-	public MatcherResultSequenceException(List<MatcherResultSuccess> successfulMatches, MatcherResultFailed failedMatch, TxrAssertException failedAssert) {
+	public MatcherResultSequenceException(int txrLineNumber, int startLineNumber, List<MatcherResultSuccess> successfulMatches, MatcherResultFailed failedMatch, TxrAssertException failedAssert) {
+		super(txrLineNumber, startLineNumber);
 		this.successfulMatches = successfulMatches;
 		this.failedMatch = failedMatch;
 		this.failedAssert = failedAssert;

@@ -18,10 +18,6 @@ import txr.matchers.TxrState.LineState;
  */
 public class MatcherResultNoneException extends MatcherResultException {
 
-	private int txrLineNumber;
-	
-	private int startLineNumber;
-
 	private List<MatcherResultFailedPair> failedMatchers;
 
 	private MatchContext context;
@@ -29,8 +25,7 @@ public class MatcherResultNoneException extends MatcherResultException {
 	private LineState stateOfThisLine;
 	
 	public MatcherResultNoneException(int txrLineNumber, int startLineNumber, List<MatcherResultFailedPair> failedMatchers, MatchContext context, TxrAssertException txrAssertException, LineState stateOfThisLine) {
-		this.txrLineNumber = txrLineNumber;
-		this.startLineNumber = startLineNumber;
+		super(txrLineNumber, startLineNumber);
 		this.failedMatchers = failedMatchers;
 		this.context = context;
 		this.stateOfThisLine = stateOfThisLine;

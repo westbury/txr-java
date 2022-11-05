@@ -8,17 +8,16 @@ import txr.matchers.MatcherResult.TxrAction;
 public class MatcherResultCollectFailure extends MatcherResultFailed {
 
 	private int txrLineNumber;
-	private int startLine;
+	private int startLineNumber;
 	private String message;
 	private List<MatcherResultSuccess> bodyMatchers;
 	private MatcherResultSuccess lastMatch;
 	private MatcherResultSuccess untilMatch;
 	private MatcherResultFailed bestFailedMatch;
 
-	public MatcherResultCollectFailure(int txrLineNumber, int startLine, String message, List<MatcherResultSuccess> bodyMatchers,
+	public MatcherResultCollectFailure(int txrLineNumber, int startLineNumber, String message, List<MatcherResultSuccess> bodyMatchers,
 			MatcherResultSuccess lastMatch, MatcherResultSuccess untilMatch, MatcherResultFailed bestFailedMatch) {
-		this.txrLineNumber = txrLineNumber;
-		this.startLine = startLine;
+		super(txrLineNumber, startLineNumber);
 		this.message = message;
 		this.bodyMatchers = bodyMatchers;
 		this.lastMatch = lastMatch;
@@ -28,7 +27,7 @@ public class MatcherResultCollectFailure extends MatcherResultFailed {
 
 	@Override
 	public void createControls(IControlCallback callback, int indentation) {
-		callback.createDirective(txrLineNumber, startLine, indentation, new TxrAction[0]);
+		callback.createDirective(txrLineNumber, startLineNumber, indentation, new TxrAction[0]);
 
 		// Show anything that did match as that would be useful.
 		for (MatcherResultSuccess bodyMatcher : bodyMatchers) {

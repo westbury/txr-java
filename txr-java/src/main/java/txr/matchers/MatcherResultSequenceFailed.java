@@ -9,7 +9,8 @@ public class MatcherResultSequenceFailed extends MatcherResultFailed {
 	List<MatcherResultSuccess> successfulMatches;
 	MatcherResultFailed failedMatch;
 
-	public MatcherResultSequenceFailed(List<MatcherResultSuccess> successfulMatches, MatcherResultFailed failedMatch) {
+	public MatcherResultSequenceFailed(int txrLineNumber, int startLineNumber, List<MatcherResultSuccess> successfulMatches, MatcherResultFailed failedMatch) {
+		super(txrLineNumber, startLineNumber);
 		this.successfulMatches = successfulMatches;
 		this.failedMatch = failedMatch;
 		this.score = successfulMatches.size() * 10 + failedMatch.getScore();

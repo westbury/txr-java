@@ -13,10 +13,6 @@ import txr.matchers.MatcherResult.TxrAction;
  */
 public class MatcherResultMaybeFailure extends MatcherResultFailed {
 
-	private int txrLineNumber;
-	
-	private int startLineNumber;
-	
 	private List<MatcherResultPair> subClauseResults;
 
 	private MatcherResultFailed failedMatch;
@@ -27,8 +23,7 @@ public class MatcherResultMaybeFailure extends MatcherResultFailed {
  * @param failedMatch always an exception, as that is the only way @(maybe) can fail to match
  */
 	public MatcherResultMaybeFailure(int txrLineNumber, int startLineNumber, List<MatcherResultPair> allMatcherResults, MatcherResultFailed failedMatch) {
-		this.txrLineNumber = txrLineNumber;
-		this.startLineNumber = startLineNumber;
+		super(txrLineNumber, startLineNumber);
 		this.subClauseResults = allMatcherResults;
 		this.failedMatch = failedMatch;
 	}

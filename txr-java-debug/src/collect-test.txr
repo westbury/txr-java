@@ -1,0 +1,11 @@
+Introduction
+
+@(collect)
+Title: @description
+Amount: £@amount
+
+@(until)
+Conclusion
+@(end)
+Conclusion
+Total: £@delivery

@@ -11,3 +11,10 @@ txrFiles:
       dataFiles:
          - { dataFile: "none - fails.txt", description: "none - with a passing sub-clause" }
          - { dataFile: "none - passes.txt", description: "none - with all sub-clauses failing" }
+   -
+      txrFile: "skip - simple.txr"
+      description: "skip - simple test"
+      dataFiles:
+         - { dataFile: "skip - fails.txt", description: "skip - with none completely matching" }
+         - { dataFile: "skip - passes.txt", description: "skip - with a match" }
+         

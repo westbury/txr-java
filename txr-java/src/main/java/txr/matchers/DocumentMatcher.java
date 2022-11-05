@@ -22,7 +22,7 @@ public class DocumentMatcher {
 
 	public TxrOptions options;
 
-	private MatchSequence topLevelMatcher = new MatchSequence();
+	private MatchSequence topLevelMatcher = new MatchSequence(1);
 
 	/**
 	 * 
@@ -242,60 +242,14 @@ public class DocumentMatcher {
 				state = new TxrState() {};
 			}
 			Optional<LineState> lineState = Arrays.stream(state.lineStates).filter(x -> x.txrLineNumber == command.getTxrLineNumber() && x.dataLineNumber == command.getDataLineNumber()).findAny();
-			switch (command.getCommandId()) {
-				case ExpectAnotherCollectMatch:
-				{
-					if (!command.isClearingCommand()) {
-						if (lineState.isPresent()) {
-							lineState.get().showExtraUnmatched = true;
-						} else {
-							List<LineState> asMutableList = new ArrayList<LineState>(Arrays.asList(state.lineStates));
-							LineState newState = state.new LineState(command.getTxrLineNumber(), command.getDataLineNumber());
-							newState.showExtraUnmatched = true;
-							asMutableList.add(newState);
-							state.lineStates = asMutableList.toArray(new LineState[0]);
-						}
-					} else {
-						if (lineState.isPresent()) {
-							lineState.get().showExtraUnmatched = false;
-						}
-					}
-				}
-				break;
-				case ExpectOptionalToMatch:
-				{
-					if (!command.isClearingCommand()) {
-						if (lineState.isPresent()) {
-							lineState.get().showFailingMaybe = true;
-						} else {
-							List<LineState> asMutableList = new ArrayList<LineState>(Arrays.asList(state.lineStates));
-							LineState newState = state.new LineState(command.getTxrLineNumber(), command.getDataLineNumber());
-							newState.showFailingMaybe = true;
-							asMutableList.add(newState);
-							state.lineStates = asMutableList.toArray(new LineState[0]);
-						}
-					} else {
-						lineState.get().showFailingMaybe = false;
-					}
-				}
-				break;
-				case ExpectNoneClauseToFail:
-				{
-					if (!command.isClearingCommand()) {
-						if (lineState.isPresent()) {
-							lineState.get().showAllFailuresInNone = true;
-						} else {
-							List<LineState> asMutableList = new ArrayList<LineState>(Arrays.asList(state.lineStates));
-							LineState newState = state.new LineState(command.getTxrLineNumber(), command.getDataLineNumber());
-							newState.showAllFailuresInNone = true;
-							asMutableList.add(newState);
-							state.lineStates = asMutableList.toArray(new LineState[0]);
-						}
-					} else {
-						lineState.get().showAllFailuresInNone = false;
-					}
-				}
-				break;
+			if (lineState.isPresent()) {
+				command.execute(lineState.get());
+			} else {
+				List<LineState> asMutableList = new ArrayList<LineState>(Arrays.asList(state.lineStates));
+				LineState newState = state.new LineState(command.getTxrLineNumber(), command.getDataLineNumber());
+				command.execute(newState);
+				asMutableList.add(newState);
+				state.lineStates = asMutableList.toArray(new LineState[0]);
 			}
 		}
 		

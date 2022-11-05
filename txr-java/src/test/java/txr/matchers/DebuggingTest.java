@@ -3,8 +3,13 @@
  */
 package txr.matchers;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
@@ -14,6 +19,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import txr.matchers.DocumentMatcher.MatchPair;
+import txr.matchers.MatcherResult.IControlCallback;
+import txr.matchers.MatcherResult.TxrAction;
 import txr.parser.AST;
 import txr.parser.Parser;
 import txr.parser.TxrErrorInDocumentException;
@@ -52,31 +59,31 @@ public class DebuggingTest {
 				+ "\n"
 				+ "@(collect)\n"
 				+ "Title: @description\n"
-				+ "Amount: £@amount\n"
+				+ "Amount: ï¿½@amount\n"
 				+ "\n"
 				+ "@(until)\n"
 				+ "Conclusion\n"
 				+ "@(end)\n"
 				+ "Conclusion\n"
-				+ "Total: £@delivery\n");
-//		assertEquals("[[Text: *Introduction*], [], [[Symbol: collect]], [Text: *Title: *, Ident: description], [Text: *Amount: £*, Ident: amount], [], [[Symbol: until]], [Text: *Conclusion*], [[Symbol: end]], [Text: *Conclusion*], [Text: *Total: £*, Ident: delivery]]", ast.toString());
+				+ "Total: ï¿½@delivery\n");
+//		assertEquals("[[Text: *Introduction*], [], [[Symbol: collect]], [Text: *Title: *, Ident: description], [Text: *Amount: ï¿½*, Ident: amount], [], [[Symbol: until]], [Text: *Conclusion*], [[Symbol: end]], [Text: *Conclusion*], [Text: *Total: ï¿½*, Ident: delivery]]", ast.toString());
 
 		DocumentMatcher m = new DocumentMatcher(ast);
-//		assertEquals("[Match on line: [Text: [*Introduction*]], Match on line: [], Collect body=[Match on line: [Text: [*Title: *], {Variable: Ident: description, Following: [EOL]}], Match on line: [Text: [*Amount: £*], {Variable: Ident: amount, Following: [EOL]}], Match on line: []] until=[Match on line: [Text: [*Conclusion*]]], Match on line: [Text: [*Conclusion*]], Match on line: [Text: [*Total: £*], {Variable: Ident: delivery, Following: [EOL]}]]", m.toString());
+//		assertEquals("[Match on line: [Text: [*Introduction*]], Match on line: [], Collect body=[Match on line: [Text: [*Title: *], {Variable: Ident: description, Following: [EOL]}], Match on line: [Text: [*Amount: ï¿½*], {Variable: Ident: amount, Following: [EOL]}], Match on line: []] until=[Match on line: [Text: [*Conclusion*]]], Match on line: [Text: [*Conclusion*]], Match on line: [Text: [*Total: ï¿½*], {Variable: Ident: delivery, Following: [EOL]}]]", m.toString());
 
 		String [] inputText = new String [] {
 				"Introduction",
 				"",
 				"Title: Bananas",
-				"Amount: £36",
+				"Amount: ï¿½36",
 				"",
 				"Title: Oranges",
-				"Amount: £42",
+				"Amount: ï¿½42",
 				"",
 				"Conclusion",
-				"Total: £78.00"
+				"Total: ï¿½78.00"
 		};
-		MatchPair matchedPair = m.process2(inputText);
+		MatchPair matchedPair = m.process2(inputText, null, null);
 		MatchResults matched = matchedPair.results;
 		
 		assertNotNull(matched);
@@ -103,13 +110,13 @@ public class DebuggingTest {
 				+ "\n"
 				+ "@(collect)\n"
 				+ "Title: @description\n"
-				+ "Amount: £@amount\n"
+				+ "Amount: ï¿½@amount\n"
 				+ "\n"
 				+ "@(until)\n"
 				+ "Conclusion\n"
 				+ "@(end)\n"
 				+ "Conclusion\n"
-				+ "Total: £@delivery\n");
+				+ "Total: ï¿½@delivery\n");
 
 		DocumentMatcher m = new DocumentMatcher(ast);
 
@@ -117,18 +124,19 @@ public class DebuggingTest {
 				"Introduction",
 				"",
 				"Title: Bananas",
-				"Amount: £36",
+				"Amount: ï¿½36",
 				"",
 				"Title: Oranges",
-				"Amount: £42",
+				"Amount: ï¿½42",
 				"",
 				"Conclusionxxx",
-				"Total: £78.00"
+				"Total: ï¿½78.00"
 		};
-		MatchPair matchedPair = m.process2(inputText);
+		MatchPair matchedPair = m.process2(inputText, null, null);
 		MatchResults matched = matchedPair.results;
 		
-		assertNull(matched);
+		// We get results, even when no match, for debugging purposes?
+		assertNotNull(matched);
 		
 //		0, 0
 //		1, 1
@@ -163,13 +171,84 @@ public class DebuggingTest {
 				"Match A"
 		};
 		
-		MatchPair matchedPair = m.process2(inputText);
+		MatchPair matchedPair = m.process2(inputText, null, null);
 
 		MatcherResultFailed failed1 = matchedPair.matcherResults.getFailedResult();
 		assertTrue(failed1 instanceof MatcherResultSequenceFailed);
 		MatcherResultFailed failed2 = ((MatcherResultSequenceFailed)failed1).failedMatch;
 		assertTrue(failed2 instanceof MatcherResultSkipFailure);
-		assertTrue(((MatcherResultSkipFailure)failed2).bestSkippedToLine == 3);
+		
+		List<Object> calls = new ArrayList<>();
+		failed2.createControls(new IControlCallback() {
+
+			@Override
+			public void createDirective(int txrLineIndex, int textDataLineNumber, int indentation,
+					TxrAction[] actions) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void createMatch(int txrLineNumber, int textDataLineNumber, int indentation) {
+				calls.add(new CallMatch(txrLineNumber, textDataLineNumber, indentation));
+			}
+
+			@Override
+			public void createMismatch(int txrLineNumber, int textDataLineNumber, int indentation, String message) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void rewind(int textDataLineNumber) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void createDirectiveWithError(int txrLineNumber, int startLine, int indentation) {
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void showRemainingLines() {
+				// TODO Auto-generated method stub
+				
+			}
+		}, 0);
+		assertTrue(calls.get(0) instanceof CallMatch);
+		assertTrue(((CallMatch)calls.get(0)).textDataLineNumber == 3);
+
 	}
 
+	@Test
+	public void CollectWithAssertFailureTest() throws TxrErrorInDocumentException {
+		Parser p = new Parser();
+		AST ast = p.parse("@(collect)\n"
+				+ "ORDER\n"
+				+ "@(assert)\n"
+				+ "description: @desc\n"
+				+ "total: @total\n"
+				+ "@(end)\n");
+
+		DocumentMatcher m = new DocumentMatcher(ast);
+
+		String [] inputText = new String [] {
+				"Introduction",
+				"ORDER",
+				"description: foo",
+				"not-total: bar",
+		};
+		MatchPair matchedPair = m.process2(inputText, null, null);
+
+		MatcherResult matchedResults = matchedPair.matcherResults;		
+		assertNotNull(matchedResults);
+		assertFalse(matchedResults.isSuccess());
+		
+
+		MatchResults matched = matchedPair.results;		
+		assertNotNull(matched);
+		
+	}
 }

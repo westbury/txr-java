@@ -31,6 +31,10 @@ public class TxrState {
 		// If this flag is on, it means the user is expecting a matching @(none) to fail to match. In order words,
 		// the user expects one of the sub-clauses to match when in fact none matched.
 		boolean showAllFailuresInNone;
+		
+		// If this is not -1 then the user has requested that the @(skip) is shown skipping to exactly
+		// this line.
+		int showSkippingToThisLine;
 	}
 	
 	// Only one of these can exist for a given data line.

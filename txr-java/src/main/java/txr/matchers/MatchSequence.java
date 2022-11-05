@@ -16,8 +16,14 @@ import txr.parser.Symbol;
  */
 public class MatchSequence extends VerticalMatcher {
 
+	protected final int txrLineNumber;
+	
 	List<Matcher> sequence = new ArrayList<>();
 	
+	public MatchSequence(int txrLineNumber) {
+		this.txrLineNumber = txrLineNumber;
+	}
+
 	@Override
 	public void addNextMatcherInMatchSequence(Matcher matcher) {
 		sequence.add(matcher);
@@ -56,13 +62,13 @@ public class MatchSequence extends VerticalMatcher {
 				TxrAssertException failedAssert = context.assertContext.checkMatchFailureIsOk(reader.getCurrent(), matcher);
 				if (failedAssert != null) {
 					// This matcher throws an exception because we got a match failure after an @(assert)
-					return new MatcherResult(new MatcherResultSequenceException(successfulMatches, matches.getFailedResult(), failedAssert));
+					return new MatcherResult(new MatcherResultSequenceException(txrLineNumber, start, successfulMatches, matches.getFailedResult(), failedAssert));
 				} else {
 					context.assertContext.checkMatchFailureIsOk(reader.getCurrent(), matcher);
 					reader.setCurrent(start);
-					return new MatcherResult(new MatcherResultSequenceFailed(successfulMatches, matches.getFailedResult()));
+					return new MatcherResult(new MatcherResultSequenceFailed(txrLineNumber, start, successfulMatches, matches.getFailedResult()));
 				}
-
+				
 			}
 			
 			// It matches, so add this to our line matching list for debugging

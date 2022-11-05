@@ -1,5 +1,7 @@
 package txr.matchers;
 
+import txr.matchers.TxrState.LineState;
+
 public class MatcherResult {
 
 	private MatcherResultSuccess success;
@@ -32,10 +34,42 @@ public class MatcherResult {
 		boolean isClearingCommand();
 	}
 	
-	public enum CommandId {
-		ExpectAnotherCollectMatch,
-		ExpectOptionalToMatch,
-		ExpectNoneClauseToFail
+	public static abstract class CommandId {
+		static CommandId ExpectAnotherCollectMatch = new CommandId() {
+			@Override
+			public void execute(LineState lineState, boolean isClearingCommand) {
+				lineState.showExtraUnmatched = !isClearingCommand;
+			}
+		};
+		static CommandId ExpectOptionalToMatch = new CommandId() {
+			@Override
+			public void execute(LineState lineState, boolean isClearingCommand) {
+				lineState.showFailingMaybe = !isClearingCommand;
+			}
+		};
+		static CommandId ExpectNoneClauseToFail = new CommandId() {
+			@Override
+			public void execute(LineState lineState, boolean isClearingCommand) {
+				lineState.showAllFailuresInNone = !isClearingCommand;
+			}
+		};
+
+		public static class ExpectSkipToGivenLine extends CommandId {
+			public final int skippedToLineNumber;
+			public ExpectSkipToGivenLine(int skippedToLineNumber) {
+				this.skippedToLineNumber = skippedToLineNumber;
+			}
+			@Override
+			public void execute(LineState lineState, boolean isClearingCommand) {
+				if (isClearingCommand) {
+					lineState.showSkippingToThisLine = -1;
+				} else {
+					lineState.showSkippingToThisLine = skippedToLineNumber;
+				}
+			}
+		}
+
+		public abstract void execute(LineState lineState, boolean isClearingCommand);
 	}
 	
 	public interface TxrCommandExecution {
@@ -43,6 +77,7 @@ public class MatcherResult {
 		int getTxrLineNumber();
 		int getDataLineNumber();
 		boolean isClearingCommand();
+		void execute(LineState lineState);
 	}
 	
 	public interface IControlCallback {

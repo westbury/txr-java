@@ -4,7 +4,16 @@ import txr.matchers.MatcherResult.IControlCallback;
 
 public abstract class MatcherResultFailed {
 
+	protected final int txrLineNumber;
+	
+	protected final int startLineNumber;
+
 	protected int score = 0;
+	
+	protected MatcherResultFailed(int txrLineNumber, int startLineNumber) {
+		this.txrLineNumber = txrLineNumber;
+		this.startLineNumber = startLineNumber;
+	}
 	
 	public abstract void createControls(IControlCallback callback, int indentation);
 
@@ -22,6 +31,16 @@ public abstract class MatcherResultFailed {
 	 */
 	public int getScore() {
 		return score;
+	}
+
+	/**
+	 * We require access to this so we can put the line number in the action for, for example,
+	 * @(skip)
+	 * 
+	 * @return
+	 */
+	public int getLineNumber() {
+		return this.startLineNumber;
 	}
 
 }

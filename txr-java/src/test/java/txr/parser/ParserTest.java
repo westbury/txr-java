@@ -65,7 +65,7 @@ public class ParserTest {
 		TxrException exception = assertThrows(TxrException.class, () -> {
 			new DocumentMatcher(ast);
 	    });
-	    assertTrue(exception.getMessage().contains("expected something"));
+	    assertTrue(exception.getMessage().contains("Throw An expression has been found.  This expression occurs on a line with other data (there are characters on the line outside the expression), yet this is not a supported horizontal directive, at line 1, [Symbol: collect, Symbol: :maxgap, Integer: 12, Symbol: :mingap, Integer: 5]"));
 	}
 
 	@Test

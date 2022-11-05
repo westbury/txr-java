@@ -63,6 +63,7 @@ import txr.matchers.MatcherResult.IControlCallback;
 import txr.matchers.MatcherResult.TxrAction;
 import txr.matchers.MatcherResult.TxrCommandExecution;
 import txr.matchers.TxrState;
+import txr.matchers.TxrState.LineState;
 import txr.parser.TxrErrorInDocumentException;
 
 
@@ -189,7 +190,13 @@ public class TxrDebugPart {
 			@Override
 			public int getDataLineNumber() {
 				return dataLineNumber;
-			}};
+			}
+
+			@Override
+			public void execute(LineState lineState) {
+				commandId.execute(lineState, isClearingCommand);
+			}
+		};
 		runMatcher(command);
 		txrEditorComposite.requestLayout();
 		testDataComposite.requestLayout();

@@ -7,17 +7,12 @@ import txr.matchers.MatcherResult.TxrAction;
 
 public class MatcherResultCaseFailure extends MatcherResultFailed {
 
-	private int txrLineNumber;
-	
-	private int startLineNumber;
-
 	private String message;
 
 	private List<MatcherResultFailedPair> failedMatchers;
 
 	public MatcherResultCaseFailure(int txrLineNumber, int startLineNumber, String message, List<MatcherResultFailedPair> failedMatchers) {
-		this.txrLineNumber = txrLineNumber;
-		this.startLineNumber = startLineNumber;
+		super(txrLineNumber, startLineNumber);
 		this.message = message;
 		this.failedMatchers = failedMatchers;
 	}

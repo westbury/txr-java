@@ -12,6 +12,7 @@ public abstract class ParallelMatcher extends VerticalMatcher {
 
 	private MatchSequence where;
 	
+	// TODO remove this class. txrLineIndex can now be obtained from MatchSequence
 	protected static class Pair {
 		public final int txrLineIndex;
 		public final MatchSequence sequence;
@@ -27,7 +28,7 @@ public abstract class ParallelMatcher extends VerticalMatcher {
 	public ParallelMatcher(int txrLineNumber) {
 		this.txrLineNumber = txrLineNumber;
 		
-		where = new MatchSequence();
+		where = new MatchSequence(txrLineNumber);
 		content.add(new Pair(txrLineNumber, where));
 	}
 
@@ -42,7 +43,7 @@ public abstract class ParallelMatcher extends VerticalMatcher {
 		switch (symbol.symbolText.toLowerCase()) {
 			case "or":
 			case "and":
-				where = new MatchSequence();
+				where = new MatchSequence(txrLineNumber);
 				content.add(new Pair(txrLineIndex, where));
 				break;
 				

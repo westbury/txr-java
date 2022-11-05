@@ -10,9 +10,6 @@ import txr.matchers.TxrState.LineState;
 
 public class MatcherResultCollectException extends MatcherResultException {
 
-	private int txrLineNumber;
-	private int startLine;
-
 	private List<MatcherResultSuccess> successfulMatches;
 	private MatcherResultFailed failedMatch;
 	private MatcherResultSuccess lastMatch;
@@ -21,9 +18,8 @@ public class MatcherResultCollectException extends MatcherResultException {
 
 //	private TxrAssertException failedAssert;
 
-	public MatcherResultCollectException(int txrLineNumber, int startLine, List<MatcherResultSuccess> successfulMatches, MatcherResultSuccess lastMatch, MatcherResultSuccess untilMatch, MatcherResultFailed failedMatch, MatchContext context) {
-		this.txrLineNumber = txrLineNumber;
-		this.startLine = startLine;
+	public MatcherResultCollectException(int txrLineNumber, int startLineNumber, List<MatcherResultSuccess> successfulMatches, MatcherResultSuccess lastMatch, MatcherResultSuccess untilMatch, MatcherResultFailed failedMatch, MatchContext context) {
+		super(txrLineNumber, startLineNumber);
 		this.successfulMatches = successfulMatches;
 		this.lastMatch = lastMatch;
 		this.untilMatch = untilMatch;
@@ -33,7 +29,7 @@ public class MatcherResultCollectException extends MatcherResultException {
 
 	@Override
 	public void createControls(IControlCallback callback, int indentation) {
-		LineState stateOfThisLine = this.context.getLineState(this.txrLineNumber + 1, startLine);
+		LineState stateOfThisLine = this.context.getLineState(this.txrLineNumber + 1, startLineNumber);
 
 		boolean showExtraUnmatched = stateOfThisLine != null && stateOfThisLine.showExtraUnmatched;
 
@@ -54,7 +50,7 @@ public class MatcherResultCollectException extends MatcherResultException {
 				}
 			});
 		}
-		callback.createDirective(txrLineNumber, startLine, indentation, actions.toArray(new TxrAction[0]));
+		callback.createDirective(txrLineNumber, startLineNumber, indentation, actions.toArray(new TxrAction[0]));
 
 		for (MatcherResultSuccess successfulMatch : successfulMatches) {
 			successfulMatch.createControls(callback, indentation + 1);

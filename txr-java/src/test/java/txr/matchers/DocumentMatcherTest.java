@@ -50,7 +50,7 @@ public class DocumentMatcherTest {
 		assertEquals("[[Text: *Match this*], [Text: *value = *, Ident: x], [Text: *Match this @ nine*]]", ast.toString());
 
 		DocumentMatcher m = new DocumentMatcher(ast);
-		assertEquals("[Match on line: [Text: [*Match this*]], Match on line: [Text: [*value = *], {Variable: Ident: x, Following: [EOL]}], Match on line: [Text: [*Match this @ nine*]]]", m.toString());
+		assertEquals("[Match on line: [Text: [*Match*, *this*]], Match on line: [Text: [*value*, *=*], {Variable: Ident: x, Following: [EOL]}], Match on line: [Text: [*Match*, *this*, *@*, *nine*]]]", m.toString());
 
 		String [] inputText = new String [] {
 				"Match this",
@@ -69,29 +69,29 @@ public class DocumentMatcherTest {
 				+ "\n"
 				+ "@(collect)\n"
 				+ "Title: @description\n"
-				+ "Amount: £@amount\n"
+				+ "Amount: ï¿½@amount\n"
 				+ "\n"
 				+ "@(until)\n"
 				+ "Conclusion\n"
 				+ "@(end)\n"
 				+ "Conclusion\n"
-				+ "Total: £@delivery\n");
-		assertEquals("[[Text: *Introduction*], [], [[Symbol: collect]], [Text: *Title: *, Ident: description], [Text: *Amount: £*, Ident: amount], [], [[Symbol: until]], [Text: *Conclusion*], [[Symbol: end]], [Text: *Conclusion*], [Text: *Total: £*, Ident: delivery]]", ast.toString());
+				+ "Total: ï¿½@delivery\n");
+		assertEquals("[[Text: *Introduction*], [], [[Symbol: collect]], [Text: *Title: *, Ident: description], [Text: *Amount: ï¿½*, Ident: amount], [], [[Symbol: until]], [Text: *Conclusion*], [[Symbol: end]], [Text: *Conclusion*], [Text: *Total: ï¿½*, Ident: delivery]]", ast.toString());
 
 		DocumentMatcher m = new DocumentMatcher(ast);
-		assertEquals("[Match on line: [Text: [*Introduction*]], Match on line: [], Collect body=[Match on line: [Text: [*Title:*], {Variable: Ident: description, Following: [EOL]}], Match on line: [Text: [*Amount:*, *£*], {Variable: Ident: amount, Following: [EOL]}], Match on line: []] until=[Match on line: [Text: [*Conclusion*]]], Match on line: [Text: [*Conclusion*]], Match on line: [Text: [*Total:*, *£*], {Variable: Ident: delivery, Following: [EOL]}]]", m.toString());
+		assertEquals("[Match on line: [Text: [*Introduction*]], Match on line: [], Collect body=[Match on line: [Text: [*Title:*], {Variable: Ident: description, Following: [EOL]}], Match on line: [Text: [*Amount:*, *ï¿½*], {Variable: Ident: amount, Following: [EOL]}], Match on line: []] until=[Match on line: [Text: [*Conclusion*]]], Match on line: [Text: [*Conclusion*]], Match on line: [Text: [*Total:*, *ï¿½*], {Variable: Ident: delivery, Following: [EOL]}]]", m.toString());
 
 		String [] inputText = new String [] {
 				"Introduction",
 				"",
 				"Title: Bananas",
-				"Amount: £36",
+				"Amount: ï¿½36",
 				"",
 				"Title: Oranges",
-				"Amount: £42",
+				"Amount: ï¿½42",
 				"",
 				"Conclusion",
-				"Total: £78.00"
+				"Total: ï¿½78.00"
 		};
 		MatchResults matched = m.process(inputText);
 		assertNotNull(matched);
@@ -137,11 +137,15 @@ public class DocumentMatcherTest {
 	public void MaybeWithMultipleMatchesTest() throws TxrErrorInDocumentException {
 		Parser p = new Parser();
 		AST ast = p.parse("Introduction\n"
+				+ "@(collect)\n"
 				+ "@(maybe)\n"
 				+ "Case1: @description\n"
 				+ "@(or)\n"
 				+ "@general\n"
 				+ "Case1: @description\n"
+				+ "@(end)\n"
+				+ "@(until)\n"
+				+ "Conclusion\n"
 				+ "@(end)\n"
 				+ "Conclusion\n");
 
@@ -150,6 +154,7 @@ public class DocumentMatcherTest {
 		String [] inputText = new String [] {
 				"Introduction",
 				"Case1: Bananas",
+				"oranges are good today",
 				"Case1: Oranges",
 				"Conclusion"
 		};
@@ -169,7 +174,7 @@ public class DocumentMatcherTest {
 		assertEquals("[[Text: *Match this*], [Text: *value = *, Ident: x], [Text: *Match this @ nine*]]", ast.toString());
 
 		DocumentMatcher m = new DocumentMatcher(ast);
-		assertEquals("[Match on line: [Text: [*Match this*]], Match on line: [Text: [*value = *], {Variable: Ident: x, Following: [EOL]}], Match on line: [Text: [*Match this @ nine*]]]", m.toString());
+		assertEquals("[Match on line: [Text: [*Match*, *this*]], Match on line: [Text: [*value*, *=*], {Variable: Ident: x, Following: [EOL]}], Match on line: [Text: [*Match*, *this*, *@*, *nine*]]]", m.toString());
 
 		String [] inputText = new String [] {
 				"Match this",
