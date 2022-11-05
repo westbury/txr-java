@@ -33,16 +33,16 @@ public class NoneMatcher extends ParallelMatcher {
 		 * the cases matches, we are done and we fail. If none match, this matcher matches.
 		 */
 		List<MatcherResultFailed> failedMatches = new ArrayList<>();
-		for (Pair eachAlternative : content) {
+		for (MatchSequence eachAlternative : content) {
 			MatchContext subContext = new MatchContext(context.bindings, context.state);
 			
-			MatcherResult eachResult = eachAlternative.sequence.match(reader, subContext);
+			MatcherResult eachResult = eachAlternative.match(reader, subContext);
 			if (eachResult.isSuccess()) {
 				/*
 				 * As soon as we get a match, we output a failed result. We show to the user this match, even though it is back-tracked.
 				 * (See, for example, the @(until) clause of a @(collect), that likewise is shown when matched even though it is back-tracked).
 				 */
-				MatcherResultSuccessPair successPair = new MatcherResultSuccessPair(eachAlternative.txrLineIndex, eachResult.getSuccessfulResult());
+				MatcherResultSuccessPair successPair = new MatcherResultSuccessPair(eachAlternative.txrLineNumber, eachResult.getSuccessfulResult());
 				return new MatcherResult(new MatcherResultNoneFailure(txrLineNumber, startOfCases, successPair));
 			} else {
 				/*
@@ -51,13 +51,13 @@ public class NoneMatcher extends ParallelMatcher {
 				 * directives inside the sub-sequence.  If an @(assert)
 				 * directive was processed then the failure to match is an error.
 				 */
-				TxrAssertException failedAssert = subContext.assertContext.checkMatchFailureIsOk(reader.getCurrent(), eachAlternative.sequence);
+				TxrAssertException failedAssert = subContext.assertContext.checkMatchFailureIsOk(reader.getCurrent(), eachAlternative);
 				if (failedAssert != null) {
 					// This matcher fails because we got all match failures followed by an assert failure
 					// Or should the following be passing 'context' instead of 'subContext'?????
 					return new MatcherResult(new MatcherResultNoneException(txrLineNumber, startOfCases, failedMatches, subContext, failedAssert, null));
 				} else {
-					if (eachResult.getFailedResult().txrLineNumber != eachAlternative.txrLineIndex) throw new RuntimeException("mismatched txr line");
+					if (eachResult.getFailedResult().txrLineNumber != eachAlternative.txrLineNumber) throw new RuntimeException("mismatched txr line");
 					failedMatches.add(eachResult.getFailedResult());
 				}
 			}

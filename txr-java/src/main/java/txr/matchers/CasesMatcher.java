@@ -30,10 +30,10 @@ public class CasesMatcher extends ParallelMatcher {
 		 * match.
 		 */
 		List<MatcherResultFailed> failedMatches = new ArrayList<>();
-		for (Pair eachAlternative : content) {
+		for (MatchSequence eachAlternative : content) {
 			MatchContext subContext = new MatchContext(context.bindings, context.state);
 			
-			MatcherResult eachResult = eachAlternative.sequence.match(reader, subContext);
+			MatcherResult eachResult = eachAlternative.match(reader, subContext);
 			if (eachResult.isSuccess()) {
 				// TODO: We probably should also pass the list of prior failures, because part of the
 				// reason why it matched this case is because it did not match any of the prior cases.
@@ -47,12 +47,12 @@ public class CasesMatcher extends ParallelMatcher {
 				 * directives inside the sub-sequence.  If an @(assert)
 				 * directive was processed then the failure to match is an error.
 				 */
-				TxrAssertException failedAssert = subContext.assertContext.checkMatchFailureIsOk(reader.getCurrent(), eachAlternative.sequence);
+				TxrAssertException failedAssert = subContext.assertContext.checkMatchFailureIsOk(reader.getCurrent(), eachAlternative);
 				if (failedAssert != null) {
 					// This matcher fails because we got all match failures followed by an assert failure
 					return new MatcherResult(new MatcherResultCaseException(txrLineNumber, startOfCases, failedMatches, failedAssert));
 				} else {
-					if (eachResult.getFailedResult().txrLineNumber != eachAlternative.txrLineIndex) throw new RuntimeException("mismatched txr line");
+					if (eachResult.getFailedResult().txrLineNumber != eachAlternative.txrLineNumber) throw new RuntimeException("mismatched txr line");
 					failedMatches.add(eachResult.getFailedResult());
 				}
 			}

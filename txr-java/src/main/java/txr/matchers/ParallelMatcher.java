@@ -13,23 +13,13 @@ public abstract class ParallelMatcher extends VerticalMatcher {
 	private MatchSequence where;
 	
 	// TODO remove this class. txrLineIndex can now be obtained from MatchSequence
-	protected static class Pair {
-		public final int txrLineIndex;
-		public final MatchSequence sequence;
-		
-		public Pair(int txrLineIndex, MatchSequence sequence) {
-			this.txrLineIndex = txrLineIndex;
-			this.sequence = sequence;
-		}
-	}
-	
-	protected List<Pair> content = new ArrayList<>();
+	protected List<MatchSequence> content = new ArrayList<>();
 	
 	public ParallelMatcher(int txrLineNumber) {
 		this.txrLineNumber = txrLineNumber;
 		
 		where = new MatchSequence(txrLineNumber);
-		content.add(new Pair(txrLineNumber, where));
+		content.add(where);
 	}
 
 	@Override
@@ -44,7 +34,7 @@ public abstract class ParallelMatcher extends VerticalMatcher {
 			case "or":
 			case "and":
 				where = new MatchSequence(txrLineNumber);
-				content.add(new Pair(txrLineIndex, where));
+				content.add(where);
 				break;
 				
 			default:
@@ -58,8 +48,8 @@ public abstract class ParallelMatcher extends VerticalMatcher {
 		StringBuffer sb = new StringBuffer();
 		sb.append(getDirectiveName() + "[");
 		String separator = "";
-		for (Pair eachMatchSequence : content) {
-			sb.append(eachMatchSequence.sequence.toString()).append(separator);
+		for (MatchSequence eachMatchSequence : content) {
+			sb.append(eachMatchSequence.toString()).append(separator);
 			separator = ", ";
 		}
 		sb.append("]");

@@ -31,12 +31,12 @@ public class MaybeMatcher extends ParallelMatcher {
 		int longest = start;
 		List<MatcherResultPair> allMatcherResults = new ArrayList<>();
 		
-		for (Pair eachMatchSequence : content) {
+		for (MatchSequence eachMatchSequence : content) {
 			MatchContext subContext = new MatchContext(context.bindings, context.state);
 
 			LineState stateOfThisLine = null;
 
-			MatcherResult eachMatcherResult = eachMatchSequence.sequence.match(reader, subContext);
+			MatcherResult eachMatcherResult = eachMatchSequence.match(reader, subContext);
 			if (eachMatcherResult.isSuccess()) {
 				
 				int endOfThisMatch = reader.getCurrent();
@@ -64,7 +64,7 @@ public class MaybeMatcher extends ParallelMatcher {
 				stateOfThisLine = context.getLineState(txrLineNumber + 1, start); // Is this.txrLineNumber actually a line index?
 			}
 			
-			allMatcherResults.add(new MatcherResultPair(eachMatchSequence.txrLineIndex, eachMatcherResult, stateOfThisLine));
+			allMatcherResults.add(new MatcherResultPair(eachMatchSequence.txrLineNumber, eachMatcherResult, stateOfThisLine));
 		}
 
 		reader.setCurrent(longest);
