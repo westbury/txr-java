@@ -6,11 +6,11 @@ import txr.matchers.MatcherResult.IControlCallback;
 
 public class MatcherResultCaseException extends MatcherResultException {
 
-	private List<MatcherResultFailedPair> failedMatches;
+	private List<MatcherResultFailed> failedMatches;
 
 	private TxrAssertException failedAssert;
 
-	public MatcherResultCaseException(int txrLineNumber, int startLineNumber, List<MatcherResultFailedPair> failedMatches, TxrAssertException failedAssert) {
+	public MatcherResultCaseException(int txrLineNumber, int startLineNumber, List<MatcherResultFailed> failedMatches, TxrAssertException failedAssert) {
 		super(txrLineNumber, startLineNumber);
 		this.failedMatches = failedMatches;
 		this.failedAssert = failedAssert;

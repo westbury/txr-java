@@ -18,13 +18,13 @@ import txr.matchers.TxrState.LineState;
  */
 public class MatcherResultNoneException extends MatcherResultException {
 
-	private List<MatcherResultFailedPair> failedMatchers;
+	private List<MatcherResultFailed> failedMatchers;
 
 	private MatchContext context;
 
 	private LineState stateOfThisLine;
 	
-	public MatcherResultNoneException(int txrLineNumber, int startLineNumber, List<MatcherResultFailedPair> failedMatchers, MatchContext context, TxrAssertException txrAssertException, LineState stateOfThisLine) {
+	public MatcherResultNoneException(int txrLineNumber, int startLineNumber, List<MatcherResultFailed> failedMatchers, MatchContext context, TxrAssertException txrAssertException, LineState stateOfThisLine) {
 		super(txrLineNumber, startLineNumber);
 		this.failedMatchers = failedMatchers;
 		this.context = context;
@@ -53,10 +53,10 @@ public class MatcherResultNoneException extends MatcherResultException {
 		};
 		TxrAction[] actions = { action };
 
-		for (MatcherResultFailedPair failedMatcher : failedMatchers) {
+		for (MatcherResultFailed failedMatcher : failedMatchers) {
 			callback.rewind(startLineNumber);
-			callback.createDirective(failedMatcher.txrLineIndex, startLineNumber, indentation, actions);
-			failedMatcher.failedMatcher.createControls(callback, indentation + 1);
+			callback.createDirective(failedMatcher.txrLineNumber, startLineNumber, indentation, actions);
+			failedMatcher.createControls(callback, indentation + 1);
 			
 			// Next time, for the @(or) lines, don't show any actions
 			actions = new TxrAction[0];

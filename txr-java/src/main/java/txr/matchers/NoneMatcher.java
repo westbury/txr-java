@@ -32,7 +32,7 @@ public class NoneMatcher extends ParallelMatcher {
 		 * Look for a match, going through the cases in order. As soon as one of
 		 * the cases matches, we are done and we fail. If none match, this matcher matches.
 		 */
-		List<MatcherResultFailedPair> failedMatches = new ArrayList<>();
+		List<MatcherResultFailed> failedMatches = new ArrayList<>();
 		for (Pair eachAlternative : content) {
 			MatchContext subContext = new MatchContext(context.bindings, context.state);
 			
@@ -57,7 +57,8 @@ public class NoneMatcher extends ParallelMatcher {
 					// Or should the following be passing 'context' instead of 'subContext'?????
 					return new MatcherResult(new MatcherResultNoneException(txrLineNumber, startOfCases, failedMatches, subContext, failedAssert, null));
 				} else {
-					failedMatches.add(new MatcherResultFailedPair(eachAlternative.txrLineIndex, eachResult.getFailedResult()));
+					if (eachResult.getFailedResult().txrLineNumber != eachAlternative.txrLineIndex) throw new RuntimeException("mismatched txr line");
+					failedMatches.add(eachResult.getFailedResult());
 				}
 			}
 		}

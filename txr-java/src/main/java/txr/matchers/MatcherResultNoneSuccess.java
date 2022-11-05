@@ -11,10 +11,10 @@ public class MatcherResultNoneSuccess extends MatcherResultSuccess {
 
 	private int txrLineNumber;
 	private int startLineNumber;
-	private List<MatcherResultFailedPair> failedMatchers;
+	private List<MatcherResultFailed> failedMatchers;
 	private LineState stateOfThisLine;
 
-	public MatcherResultNoneSuccess(int txrLineNumber, int startLineNumber, List<MatcherResultFailedPair> failedMatchers, LineState stateOfThisLine) {
+	public MatcherResultNoneSuccess(int txrLineNumber, int startLineNumber, List<MatcherResultFailed> failedMatchers, LineState stateOfThisLine) {
 		this.txrLineNumber = txrLineNumber;
 		this.startLineNumber = startLineNumber;
 		this.failedMatchers = failedMatchers;

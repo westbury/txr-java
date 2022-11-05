@@ -9,9 +9,9 @@ public class MatcherResultCaseFailure extends MatcherResultFailed {
 
 	private String message;
 
-	private List<MatcherResultFailedPair> failedMatchers;
+	private List<MatcherResultFailed> failedMatchers;
 
-	public MatcherResultCaseFailure(int txrLineNumber, int startLineNumber, String message, List<MatcherResultFailedPair> failedMatchers) {
+	public MatcherResultCaseFailure(int txrLineNumber, int startLineNumber, String message, List<MatcherResultFailed> failedMatchers) {
 		super(txrLineNumber, startLineNumber);
 		this.message = message;
 		this.failedMatchers = failedMatchers;
@@ -23,10 +23,10 @@ public class MatcherResultCaseFailure extends MatcherResultFailed {
 		//		callback.createDirective(txrLineNumber, startLineNumber, indentation, new TxrAction[0]);
 
 		// Show anything that did match as that would be useful.
-		for (MatcherResultFailedPair failedMatcher : failedMatchers) {
+		for (MatcherResultFailed failedMatcher : failedMatchers) {
 			callback.rewind(startLineNumber);
-			callback.createDirective(failedMatcher.txrLineIndex, startLineNumber, indentation, new TxrAction[0]);
-			failedMatcher.failedMatcher.createControls(callback, indentation + 1);
+			callback.createDirective(failedMatcher.txrLineNumber, startLineNumber, indentation, new TxrAction[0]);
+			failedMatcher.createControls(callback, indentation + 1);
 		}
 	}
 
