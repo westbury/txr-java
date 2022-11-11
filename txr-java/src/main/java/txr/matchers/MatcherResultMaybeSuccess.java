@@ -89,6 +89,10 @@ public class MatcherResultMaybeSuccess extends MatcherResultSuccess {
 				
 				if (showFailingMaybe) {
 					subClauseResult.matcherResult.createControls(callback, indentation + 1);
+					
+					// We must rewind here because we want the matching to continue from the
+					// same point as where the @(maybe) attempted to match.
+					callback.rewind(startLineNumber);
 				}
 			}
 		}

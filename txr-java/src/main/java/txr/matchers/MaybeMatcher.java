@@ -27,14 +27,15 @@ public class MaybeMatcher extends ParallelMatcher {
 	
 	@Override
 	public MatcherResult match(LinesFromInputReader reader, MatchContext context) {
-		int start = reader.getCurrent();
+		final int start = reader.getCurrent();
 		int longest = start;
 		List<MatcherResultPair> allMatcherResults = new ArrayList<>();
 		
+		// Get state for this maybe instance.
+		LineState stateOfThisLine = context.getLineState(txrLineNumber + 1, start); // Is this.txrLineNumber actually a line index?
+
 		for (MatchSequence eachMatchSequence : content) {
 			MatchContext subContext = new MatchContext(context.bindings, context.state);
-
-			LineState stateOfThisLine = null;
 
 			MatcherResult eachMatcherResult = eachMatchSequence.match(reader, subContext);
 			if (eachMatcherResult.isSuccess()) {
@@ -54,16 +55,12 @@ public class MaybeMatcher extends ParallelMatcher {
 				if (eachMatcherResult.getFailedResult().isException()) {
 					return new MatcherResult(new MatcherResultMaybeFailure(txrLineNumber, start, allMatcherResults, eachMatcherResult.getFailedResult()));
 				}
-				
-				/*
-				 * By default, we don't show any lines for a failed @(maybe). However if the user selected
-				 * the action to indicate that they expected the @(maybe) content to match then we do show
-				 * the match attempts.
-				 */
-				// Get state for this maybe instance.
-				stateOfThisLine = context.getLineState(txrLineNumber + 1, start); // Is this.txrLineNumber actually a line index?
 			}
 			
+			/*
+			 * Note that a @(maybe) can never fail unless an exception was thrown.
+			 */
+
 			allMatcherResults.add(new MatcherResultPair(eachMatchSequence.txrLineNumber, eachMatcherResult, stateOfThisLine));
 		}
 

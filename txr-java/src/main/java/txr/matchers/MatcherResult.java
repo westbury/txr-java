@@ -111,6 +111,9 @@ public class MatcherResult {
 	
 	public void createControls(IControlCallback callback) {
 		this.createControls(callback, 0);
+		if (failed != null) {
+			callback.showRemainingLines();
+		}
 	}
 
 	public void createControls(IControlCallback callback, int indentation) {
@@ -119,7 +122,6 @@ public class MatcherResult {
 		}
 		if (failed != null) {
 			failed.createControls(callback, indentation);
-			callback.showRemainingLines();
 		}
 	}
 	

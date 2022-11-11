@@ -8,7 +8,7 @@ import txr.parser.Symbol;
 
 public abstract class ParallelMatcher extends VerticalMatcher {
 
-	protected int txrLineNumber;
+	protected final int txrLineNumber;
 
 	private MatchSequence where;
 	
