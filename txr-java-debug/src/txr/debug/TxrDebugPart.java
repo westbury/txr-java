@@ -16,13 +16,6 @@ import org.eclipse.core.databinding.observable.value.IObservableValue;
 import org.eclipse.core.databinding.observable.value.IValueChangeListener;
 import org.eclipse.core.databinding.observable.value.ValueChangeEvent;
 import org.eclipse.core.databinding.observable.value.WritableValue;
-import org.eclipse.e4.ui.model.application.ui.basic.MPart;
-import org.eclipse.e4.ui.model.application.ui.basic.MPartSashContainer;
-import org.eclipse.e4.ui.model.application.ui.menu.MDirectToolItem;
-import org.eclipse.e4.ui.model.application.ui.menu.MMenuFactory;
-import org.eclipse.e4.ui.model.application.ui.menu.MToolBar;
-import org.eclipse.e4.ui.model.application.ui.menu.MToolBarElement;
-import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.custom.StackLayout;
@@ -34,7 +27,6 @@ import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FormAttachment;
@@ -58,12 +50,9 @@ import org.eclipse.swt.widgets.Text;
 
 import txr.matchers.DocumentMatcher;
 import txr.matchers.DocumentMatcher.MatchPair;
-import txr.matchers.MatcherResult.CommandId;
 import txr.matchers.MatcherResult.IControlCallback;
 import txr.matchers.MatcherResult.TxrAction;
-import txr.matchers.MatcherResult.TxrCommandExecution;
 import txr.matchers.TxrState;
-import txr.matchers.TxrState.LineState;
 import txr.parser.TxrErrorInDocumentException;
 
 

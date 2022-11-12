@@ -43,7 +43,6 @@ import txr.debug.TxrDebugPart;
 import txr.matchers.DocumentMatcher;
 import txr.matchers.DocumentMatcher.MatchPair;
 import txr.matchers.MatcherResult.TxrAction;
-import txr.matchers.MatcherResult.TxrCommandExecution;
 import txr.matchers.TxrState;
 import txr.parser.TxrErrorInDocumentException;
 

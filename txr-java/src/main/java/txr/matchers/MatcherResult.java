@@ -94,15 +94,6 @@ public class MatcherResult {
 		public abstract void execute(LineState lineState, boolean isClearingCommand);
 	}
 	
-	// TODO remove me
-	public interface TxrCommandExecution {
-		CommandId getCommandId();
-		int getTxrLineNumber();
-		int getDataLineNumber();
-		boolean isClearingCommand();
-		void execute(LineState lineState);
-	}
-	
 	public interface IControlCallback {
 		
 		void createDirective(int txrLineIndex, int textDataLineNumber, int indentation, TxrAction[] actions);

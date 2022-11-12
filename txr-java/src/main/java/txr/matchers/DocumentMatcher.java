@@ -9,7 +9,6 @@ import java.util.Scanner;
 import java.util.Stack;
 
 import txr.matchers.MatcherResult.TxrAction;
-import txr.matchers.MatcherResult.TxrCommandExecution;
 import txr.matchers.TxrState.LineState;
 import txr.parser.AST;
 import txr.parser.Expr;
