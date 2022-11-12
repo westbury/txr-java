@@ -47,7 +47,7 @@ public class MatcherResultSkipException extends MatcherResultException {
 			TxrAction action = new TxrAction() {
 				@Override
 				public String getLabel() {
-					return "Actually, don't expect this one to skip to line " + showSkippingToThisLine + " after all";
+					return "Actually, don't expect this one to skip to line " + (showSkippingToThisLine + 1) + " after all";
 				}
 				@Override
 				public CommandId getId() {
@@ -56,6 +56,14 @@ public class MatcherResultSkipException extends MatcherResultException {
 				@Override
 				public boolean isClearingCommand() {
 					return true;
+				}
+				@Override
+				public int getTxrLineNumber() {
+					return txrLineNumber;
+				}
+				@Override
+				public int getDataLineNumber() {
+					return startLineNumber;
 				}
 			};
 			actions.add(action);
@@ -76,6 +84,14 @@ public class MatcherResultSkipException extends MatcherResultException {
 					@Override
 					public boolean isClearingCommand() {
 						return false;
+					}
+					@Override
+					public int getTxrLineNumber() {
+						return txrLineNumber;
+					}
+					@Override
+					public int getDataLineNumber() {
+						return startLineNumber;
 					}
 				};
 				actions.add(action);

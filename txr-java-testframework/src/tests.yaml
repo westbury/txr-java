@@ -5,6 +5,13 @@ txrFiles:
       dataFiles:
          - { dataFile: "collect - simple.txt", description: "all collects matching" }
          - { dataFile: "collect - one fails.txt", description: "test one collect failing" }
+         - { dataFile: "collect - until clause never matches.txt", description: "test an 'until' clause that never matches" }
+   -
+      txrFile: "collect - no until clause.txr"
+      description: "collect - no-until test"
+      dataFiles:
+         - { dataFile: "collect - simple.txt", description: "all collects matching" }
+         - { dataFile: "collect - one fails.txt", description: "test one collect failing" }
    -
       txrFile: "none - simple.txr"
       description: "none - simple test"

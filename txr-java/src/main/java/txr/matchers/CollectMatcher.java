@@ -2,6 +2,7 @@ package txr.matchers;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,17 +26,25 @@ public class CollectMatcher extends VerticalMatcher {
 	BlockType where = BlockType.BODY;
 	
 	MatchSequence body;
-	
+
+	/**
+	 * Will be null if either no @(until) clause or if it did not match anything
+	 */
 	MatchSequence until;
-	
+
 	MatchSequence last;
 	
-	int txrLineNumber; // Is this really index???
-	int untilTxrLineNumber; // TODO this may be no longer needed. We can get it from 'until' sequence
+	int txrLineIndex;
+
+	/**
+	 *  null if no @(until), will not be null even if @(until) has no match
+	 */
+	Integer untilTxrLineIndex;
+
 	private int txrEndLineIndex;
 	
 	public CollectMatcher(int txrLineNumber, Expr expr) {
-		this.txrLineNumber = txrLineNumber;
+		this.txrLineIndex = txrLineNumber;
 		body = new MatchSequence(txrLineNumber);
 		
 		KeywordValues keywordValues = new KeywordValues(expr);
@@ -91,7 +100,7 @@ public class CollectMatcher extends VerticalMatcher {
 					throw new RuntimeException("Can't have UNTIL directive if already in an UNTIL or LAST block in the same COLLECT.");
 				}
 				where = BlockType.UNTIL;
-				untilTxrLineNumber = txrLineIndex;
+				untilTxrLineIndex = txrLineIndex;
 				until = new MatchSequence(txrLineIndex);
 				break;
 				
@@ -112,7 +121,7 @@ public class CollectMatcher extends VerticalMatcher {
 		int startOfCollect = reader.getCurrent();
 
 		// Get state for this collect instance.
-		LineState stateOfThisLine = context.getLineState(this.txrLineNumber + 1, startOfCollect);
+		LineState stateOfThisLine = context.getLineState(txrLineIndex, startOfCollect);
 		
 		List<MatchResultsBase> nestedBindingsList = new ArrayList<>();
 
@@ -121,7 +130,8 @@ public class CollectMatcher extends VerticalMatcher {
 		List<MatcherResultSuccess> bodyMatchers = new ArrayList<>();
 		MatcherResultSuccess untilMatch = null;
 		MatcherResultSuccess lastMatch = null;
-
+		List<MatcherResultFailed> untilAttempts = until == null ? null : new ArrayList<>();
+		
 		// We keep track of the best match since the last collect match.
 		// We reset each time we find a match. This allows us to provide better
 		// diagnostics if a match is missing. (We know a match is missing if either
@@ -140,8 +150,22 @@ public class CollectMatcher extends VerticalMatcher {
 				MatchResultsWithPending nestedBindings = new MatchResultsWithPending(context.bindings);
 				MatchContext nestedContext = new MatchContext(nestedBindings, context.state);
 				
-				String temp = reader.toString();
 				MatcherResult untilMatcherResult = until.match(reader, nestedContext);
+				
+				// Get state for this collect instance.
+				if (stateOfThisLine != null && stateOfThisLine.showUntilMatchingThisLine != -1
+						 && stateOfThisLine.showUntilMatchingThisLine == start) {
+					// The user has stated that they expect the @(until) to match this line,
+					// so that is what we show.
+			
+					// Because the state is forcing this @(until) match, we treat a regular mis-match
+					// as an exception. So we do the same for both.
+//					return new MatcherResult(new MatcherResultSkipException(this.txrLineNumber, startLine, skippedToLine, failedResult, Collections.emptyList(), subContext, stateOfThisLine));
+
+					return new MatcherResult(new MatcherResultCollectException(txrLineIndex, startOfCollect, bodyMatchers, lastMatch, untilMatcherResult, context));
+
+				}
+				
 				if (untilMatcherResult.isSuccess()) {
 					reader.setCurrent(start);
 					untilMatch = untilMatcherResult.getSuccessfulResult();
@@ -150,6 +174,8 @@ public class CollectMatcher extends VerticalMatcher {
 					endOfCollect = reader.getCurrent();
 					break;
 				} else {
+					untilAttempts.add(untilMatcherResult.getFailedResult());
+
 					/*
 					 * The sub-sequence did not match.  Check only that
 					 * the matching did not get as far as processing any @(assert)
@@ -207,7 +233,7 @@ public class CollectMatcher extends VerticalMatcher {
 				// An assert failure occurred inside the collect.
 				// We return an exception result that contains all the prior collect matches
 				// and this exception result
-				return new MatcherResult(new MatcherResultCollectException(txrLineNumber, startOfCollect, bodyMatchers, lastMatch, untilMatch, bodyMatcherResult.getFailedResult(), context));
+				return new MatcherResult(new MatcherResultCollectException(txrLineIndex, startOfCollect, bodyMatchers, lastMatch, untilMatch, bodyMatcherResult.getFailedResult(), context));
 			} else {
 				/*
 				 * The sub-sequence did not match.  Check only that
@@ -248,18 +274,18 @@ public class CollectMatcher extends VerticalMatcher {
 			String message = "Missing collect";
 			// Don't fail, always return an exception when a user action indicates an expected match.
 			// A failure will result in back-tracking and re-matching which we don't want.
-			return new MatcherResult(new MatcherResultCollectException(txrLineNumber, startOfCollect, bodyMatchers, lastMatch, untilMatch, best, context));
+			return new MatcherResult(new MatcherResultCollectException(txrLineIndex, startOfCollect, bodyMatchers, lastMatch, untilMatch, best, context));
 		}
 		
 		if (mintimes != null) {
 			if (nestedBindingsList.size() < mintimes) {
 				String message = "Collect has :mintimes set to " + mintimes + " but " + nestedBindingsList.size() + " matches were found.";
-				return new MatcherResult(new MatcherResultCollectFailure(txrLineNumber, startOfCollect, message, bodyMatchers, lastMatch, untilMatch, null));
+				return new MatcherResult(new MatcherResultCollectFailure(txrLineIndex, startOfCollect, message, bodyMatchers, lastMatch, untilMatch, null));
 			}
 		}
 
 		context.bindings.addList("collect", nestedBindingsList);
-		return new MatcherResult(new MatcherResultCollectSuccess(txrLineNumber, startOfCollect, untilTxrLineNumber, untilOfCollect, txrEndLineIndex, endOfCollect, bodyMatchers, lastMatch, untilMatch, context));
+		return new MatcherResult(new MatcherResultCollectSuccess(txrLineIndex, startOfCollect, untilTxrLineIndex, untilOfCollect, txrEndLineIndex, endOfCollect, bodyMatchers, lastMatch, untilMatch, untilAttempts, context));
 	}
 
 	public String toString() {

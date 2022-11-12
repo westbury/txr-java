@@ -32,6 +32,13 @@ public class MatcherResult {
 		CommandId getId();
 		String getLabel();
 		boolean isClearingCommand();
+		
+		// These two relate to the line to which this is attached.
+		// For example, actions on @(until) are attached to the @(collect) line and the data line where the collect started.
+		// So not the same as where the action may be placed in a context menu.
+		
+		int getTxrLineNumber();
+		int getDataLineNumber();
 	}
 	
 	public static abstract class CommandId {
@@ -69,9 +76,25 @@ public class MatcherResult {
 			}
 		}
 
+		public static class ExpectUntilToMatchGivenLine extends CommandId {
+			public final int lineNumberExpectedToMatch;
+			public ExpectUntilToMatchGivenLine(int lineNumberExpectedToMatch) {
+				this.lineNumberExpectedToMatch = lineNumberExpectedToMatch;
+			}
+			@Override
+			public void execute(LineState lineState, boolean isClearingCommand) {
+				if (isClearingCommand) {
+					lineState.showUntilMatchingThisLine = -1;
+				} else {
+					lineState.showUntilMatchingThisLine = lineNumberExpectedToMatch;
+				}
+			}
+		}
+
 		public abstract void execute(LineState lineState, boolean isClearingCommand);
 	}
 	
+	// TODO remove me
 	public interface TxrCommandExecution {
 		CommandId getCommandId();
 		int getTxrLineNumber();

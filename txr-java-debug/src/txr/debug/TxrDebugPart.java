@@ -160,7 +160,7 @@ public class TxrDebugPart {
 		    item.addListener(SWT.Selection, new Listener() {
 		        @Override
 		        public void handleEvent(Event event) {
-		            executeDebugAction(action.getId(), action.isClearingCommand() , txrLineNumber, dataLineNumber);
+		            executeDebugAction(action);
 		        }
 		    });
 	    }
@@ -168,36 +168,8 @@ public class TxrDebugPart {
 	    control.setMenu(menu); 
 	}    
 	
-	private void executeDebugAction(CommandId commandId, boolean isClearingCommand, int txrLineNumber, int dataLineNumber) {
-		System.out.println(commandId + ", " + txrLineNumber + ", " + dataLineNumber);
-
-		TxrCommandExecution command = new TxrCommandExecution() {
-			@Override
-			public CommandId getCommandId() {
-				return commandId;
-			}
-
-			@Override
-			public boolean isClearingCommand() {
-				return isClearingCommand;
-			}
-
-			@Override
-			public int getTxrLineNumber() {
-				return txrLineNumber;
-			}
-
-			@Override
-			public int getDataLineNumber() {
-				return dataLineNumber;
-			}
-
-			@Override
-			public void execute(LineState lineState) {
-				commandId.execute(lineState, isClearingCommand);
-			}
-		};
-		runMatcher(command);
+	private void executeDebugAction(TxrAction action) {
+		runMatcher(action);
 		txrEditorComposite.requestLayout();
 		testDataComposite.requestLayout();
 	}
@@ -526,12 +498,12 @@ public class TxrDebugPart {
 		}
 	}
 
-	private void runMatcher(TxrCommandExecution command) {
+	private void runMatcher(TxrAction action) {
 		while (txrEditorComposite.getChildren().length != 0) {
 			txrEditorComposite.getChildren()[0].dispose();
 		}
 
-		MatchPair results = matcher.process2(this.testData, this.state, command);
+		MatchPair results = matcher.process2(this.testData, this.state, action);
 		this.state = results.newState;
 
 		while (testDataComposite.getChildren().length != 0) {
@@ -868,9 +840,9 @@ public class TxrDebugPart {
 			
 			@Override
 			public void showRemainingLines() {
-				do {
+				while (currentDataLineIndex < testData.length - 1) {
 					pushForwardTextData(); // This increments this.currentDataLineIndex by one
-				} while (currentDataLineIndex < testData.length - 1);
+				};
 			}	
 		});
 

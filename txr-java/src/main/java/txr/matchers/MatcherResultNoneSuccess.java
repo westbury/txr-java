@@ -40,6 +40,14 @@ public class MatcherResultNoneSuccess extends MatcherResultSuccess {
 			public boolean isClearingCommand() {
 				return false;
 			}
+			@Override
+			public int getTxrLineNumber() {
+				return txrLineNumber;
+			}
+			@Override
+			public int getDataLineNumber() {
+				return startLineNumber;
+			}
 		};
 		TxrAction[] actions = { action };
 

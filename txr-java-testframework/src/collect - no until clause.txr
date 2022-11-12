@@ -4,10 +4,5 @@ Introduction
 Title: @description
 Amount: $@amount
 
-@(until)
-Conclusion 1
-Conclusion 2
 @(end)
-Conclusion 1
-Conclusion 2
 Total: $@delivery

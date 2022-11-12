@@ -26,7 +26,7 @@ public class NoneMatcher extends ParallelMatcher {
 		int startOfCases = reader.getCurrent();
 		
 		// Get state for this collect instance.
-		LineState stateOfThisLine = context.getLineState(this.txrLineNumber + 1, startOfCases);
+		LineState stateOfThisLine = context.getLineState(txrLineNumber, startOfCases);
 		
 		/*
 		 * Look for a match, going through the cases in order. As soon as one of

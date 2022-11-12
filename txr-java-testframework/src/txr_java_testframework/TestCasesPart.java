@@ -42,6 +42,7 @@ import org.yaml.snakeyaml.constructor.Constructor;
 import txr.debug.TxrDebugPart;
 import txr.matchers.DocumentMatcher;
 import txr.matchers.DocumentMatcher.MatchPair;
+import txr.matchers.MatcherResult.TxrAction;
 import txr.matchers.MatcherResult.TxrCommandExecution;
 import txr.matchers.TxrState;
 import txr.parser.TxrErrorInDocumentException;
@@ -145,7 +146,7 @@ public class TestCasesPart {
 							String[] testData = testCase.getInputData();
 
 							TxrState state = null;
-							TxrCommandExecution command = null;
+							TxrAction command = null;
 							MatchPair results = matcher.process2(testData, state, command);
 
 							testCase.setStatus(results.matcherResults.isSuccess() ? TestCase.Status.PASSED : TestCase.Status.FAILED);

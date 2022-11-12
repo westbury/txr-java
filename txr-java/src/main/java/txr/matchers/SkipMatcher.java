@@ -75,7 +75,7 @@ public class SkipMatcher extends VerticalMatcher {
 		int startLine = reader.getCurrent();
 		
 		// Get state for this collect instance.
-		LineState stateOfThisLine = subContext.getLineState(this.txrLineNumber + 1, startLine);
+		LineState stateOfThisLine = subContext.getLineState(txrLineNumber, startLine);
 		if (stateOfThisLine != null && stateOfThisLine.showSkippingToThisLine != -1) {
 			// The user has stated that they expect the @(skip) to skip to the given line,
 			// so that is what we show.

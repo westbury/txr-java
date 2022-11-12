@@ -50,6 +50,14 @@ public class MatcherResultNoneException extends MatcherResultException {
 			public boolean isClearingCommand() {
 				return true;
 			}
+			@Override
+			public int getTxrLineNumber() {
+				return txrLineNumber;
+			}
+			@Override
+			public int getDataLineNumber() {
+				return startLineNumber;
+			}
 		};
 		TxrAction[] actions = { action };
 

@@ -58,6 +58,14 @@ public class MatcherResultSkipFailure extends MatcherResultFailed {
 				public boolean isClearingCommand() {
 					return false;
 				}
+				@Override
+				public int getTxrLineNumber() {
+					return txrLineNumber;
+				}
+				@Override
+				public int getDataLineNumber() {
+					return startLineNumber;
+				}
 			};
 			actions.add(action);
 			if (actions.size() >= 10) break;

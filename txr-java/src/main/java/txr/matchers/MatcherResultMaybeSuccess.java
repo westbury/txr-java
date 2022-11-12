@@ -67,6 +67,14 @@ public class MatcherResultMaybeSuccess extends MatcherResultSuccess {
 						public boolean isClearingCommand() {
 							return false;
 						}
+						@Override
+						public int getTxrLineNumber() {
+							return txrLineNumber;
+						}
+						@Override
+						public int getDataLineNumber() {
+							return startLineNumber;
+						}
 					};
 				} else {
 					action = new TxrAction() {
@@ -81,6 +89,14 @@ public class MatcherResultMaybeSuccess extends MatcherResultSuccess {
 						@Override
 						public boolean isClearingCommand() {
 							return true;
+						}
+						@Override
+						public int getTxrLineNumber() {
+							return txrLineNumber;
+						}
+						@Override
+						public int getDataLineNumber() {
+							return startLineNumber;
 						}
 					};
 				}

@@ -35,6 +35,9 @@ public class TxrState {
 		// If this is not -1 then the user has requested that the @(skip) is shown skipping to exactly
 		// this line.
 		int showSkippingToThisLine;
+		
+		// If this is not -1 then the user has requested that the @(until) is shown matching this line.
+		int showUntilMatchingThisLine;
 	}
 	
 	// Only one of these can exist for a given data line.

@@ -6,6 +6,9 @@ Amount: $36
 Title: Oranges
 Amount: $42
 
+Title: Apples
+Amount = $42
+
 Conclusion 1
-Conclusion 2
+not Conclcusion 2
 Total: $78.00

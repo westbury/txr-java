@@ -8,6 +8,7 @@ import java.util.Optional;
 import java.util.Scanner;
 import java.util.Stack;
 
+import txr.matchers.MatcherResult.TxrAction;
 import txr.matchers.MatcherResult.TxrCommandExecution;
 import txr.matchers.TxrState.LineState;
 import txr.parser.AST;
@@ -232,22 +233,22 @@ public class DocumentMatcher {
 	 * @param command an optional command, which will alter the state and result in changes in the match controls.
 	 * @return a callback that creates controls, together with the updated state
 	 */
-	public MatchPair process2(String [] inputText, TxrState state, TxrCommandExecution command) {
+	public MatchPair process2(String [] inputText, TxrState state, TxrAction action) {
 		LinesFromInputReader reader = new LinesFromInputReader(inputText);
 		MatchResults results = new MatchResultsBase();
 		
 		// Update the state
-		if (command != null) {
+		if (action != null) {
 			if (state == null) {
 				state = new TxrState() {};
 			}
-			Optional<LineState> lineState = Arrays.stream(state.lineStates).filter(x -> x.txrLineNumber == command.getTxrLineNumber() && x.dataLineNumber == command.getDataLineNumber()).findAny();
+			Optional<LineState> lineState = Arrays.stream(state.lineStates).filter(x -> x.txrLineNumber == action.getTxrLineNumber() && x.dataLineNumber == action.getDataLineNumber()).findAny();
 			if (lineState.isPresent()) {
-				command.execute(lineState.get());
+				action.getId().execute(lineState.get(), action.isClearingCommand());
 			} else {
 				List<LineState> asMutableList = new ArrayList<LineState>(Arrays.asList(state.lineStates));
-				LineState newState = state.new LineState(command.getTxrLineNumber(), command.getDataLineNumber());
-				command.execute(newState);
+				LineState newState = state.new LineState(action.getTxrLineNumber(), action.getDataLineNumber());
+				action.getId().execute(newState, action.isClearingCommand());
 				asMutableList.add(newState);
 				state.lineStates = asMutableList.toArray(new LineState[0]);
 			}

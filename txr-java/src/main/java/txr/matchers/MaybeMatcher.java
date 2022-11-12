@@ -32,7 +32,7 @@ public class MaybeMatcher extends ParallelMatcher {
 		List<MatcherResultPair> allMatcherResults = new ArrayList<>();
 		
 		// Get state for this maybe instance.
-		LineState stateOfThisLine = context.getLineState(txrLineNumber + 1, start); // Is this.txrLineNumber actually a line index?
+		LineState stateOfThisLine = context.getLineState(txrLineNumber, start); // Is this.txrLineNumber actually a line index?
 
 		for (MatchSequence eachMatchSequence : content) {
 			MatchContext subContext = new MatchContext(context.bindings, context.state);
