@@ -28,7 +28,7 @@ public class MatcherResultCollectException extends MatcherResultException {
 		super(txrLineIndex, startLineNumber);
 		this.successfulMatches = successfulMatches;
 		this.lastMatch = lastMatch;
-		this.untilMatch = new MatcherResult(untilMatch);
+		this.untilMatch = untilMatch == null ? null : new MatcherResult(untilMatch);
 		this.failedMatch = failedMatch;
 		this.context = context;
 	}
