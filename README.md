@@ -25,11 +25,27 @@ To checkout code and build:
     ./gradlew jar         (on Linux / Mac OS)
     gradlew jar           (on Windows)
     
-    To use Eclipse for developing txr-java, first build the Eclipse project files
-    (.project etc):
+    You will see that there are four projects here.
     
+    1. txr-java
+    
+    This is the core TXR interpreter. It is a plain old Jar and does not include any files specific to the Eclipse IDE. If you are using Eclipse IDE then you can generate the files (.project etc) as follows:
+    
+    cd txr-java							(go into the second level folder of the same name)
     ./gradlew eclipse         (on Linux / Mac OS)
     gradlew eclipse           (on Windows)
+    
+    2. - txr-java-debug
+    
+        This is an Eclipse project. You may use this project in your Eclipse application if you wish to allow the user to open the TXR debugger as a view within your application.
+        
+    3. - txr-java-debug-3x
+    
+    This is an Eclipse project. You may use this project together with txr-java-debug if you wish to use the TXR Debug view in an Eclipse 3.x application.
+    
+    4. - txr-java-testframework
+    
+    An Eclipe E4 application that can be used as a standalone TXR debugger.
     
 Although only a small part of the entire TXR specification has been implemented,
 the features needed for decent extraction of data from typical multi-line text is all there.
@@ -44,6 +60,7 @@ The following directives are supported:
 @(cases)
 @(skip)
 @(assert)
+@(none)
 
 Most of the parameters to these directives are not supported.
 
