@@ -1047,7 +1047,7 @@ public class TxrDebugPart {
 		try (InputStream txrInputStream = resource.openStream()) {
 			this.testData = lines;
 			
-			this.txr = new BufferedReader(new InputStreamReader(txrInputStream))
+			this.txr = new BufferedReader(new InputStreamReader(txrInputStream, "UTF-8"))
 					   .lines().collect(Collectors.joining("\n"));
 			
 			matcher = this.createMatcherFromResource(resource);

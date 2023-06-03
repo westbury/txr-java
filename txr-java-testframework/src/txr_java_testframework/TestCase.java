@@ -49,7 +49,7 @@ public class TestCase {
 	public String[] getInputData() throws IOException {
 		List<String> result = new ArrayList<>();
 		try (InputStream inputStream = new FileInputStream(resolvedDataFile);
-				Scanner scanner = new Scanner(inputStream)) {
+				Scanner scanner = new Scanner(inputStream, "UTF-8")) {
 			while (scanner.hasNextLine()) {
 				String line = scanner.nextLine();
 				result.add(line);

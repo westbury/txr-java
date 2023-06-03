@@ -23,11 +23,12 @@ public class TestConfiguration {
 
 	private File rootDirectory;
 
-	public File resolve(String dataFile) {
-		if (dataFile.startsWith("/")) {
-			return new File(dataFile);
+	public File resolve(String dataFileAsString) {
+		File dataFile = new File(dataFileAsString);
+		if (dataFile.isAbsolute()) {
+			return dataFile;
 		} else {
-			return new File(rootDirectory, dataFile);
+			return new File(rootDirectory, dataFileAsString);
 		}
 	}
 

@@ -1,0 +1,32 @@
+@(skip)
+@    (cases)
+TYPE DATE Stock Name Cost/Proceeds £ Quantity Account
+@   (or)
+TYPE DATE Reference CurrencyCode Debit Credit Balance
+@   (end)
+@(collect :maxgap 0)
+@    (cases)
+ Credit @date
+@description
+@{currency /\w\w\w/} @amount @balance
+@(bind type "credit")
+@   (or)
+ Debit @date
+@description
+@{currency /\w\w\w/} @amount @balance
+@(bind type "debit")
+@   (or)
+ Disposal @date
+@description
+@amount @{quantity /\d+/} @account
+@(bind type "disposal")
+@   (or)
+ Acquisition @date
+@description
+@amount @{quantity /\d+/} @account
+@(bind type "acquisition")
+@   (end)
+@(until)
+Sitemap@rest
+@(end)
+Sitemap@rest
