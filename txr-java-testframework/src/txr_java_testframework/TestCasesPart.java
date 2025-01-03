@@ -1,9 +1,11 @@
 package txr_java_testframework;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -39,6 +41,7 @@ import org.eclipse.swt.widgets.Text;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
 
+import txr.debug.ITxrSource;
 import txr.debug.TxrDebugPart;
 import txr.matchers.DocumentMatcher;
 import txr.matchers.DocumentMatcher.MatchPair;
@@ -47,6 +50,36 @@ import txr.matchers.TxrState;
 import txr.parser.TxrErrorInDocumentException;
 
 public class TestCasesPart {
+
+	private class TxrSourceForTestCase implements ITxrSource {
+
+		private File txrFile;
+
+		TxrSourceForTestCase(File resource) {
+			txrFile = resource;
+		}
+
+		@Override
+		public boolean isEditable() {
+			return false;
+		}
+
+		@Override
+		public String[] readLines() {
+			try (
+				BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(txrFile), "UTF-8"))
+			) {
+				return reader.lines().toArray(String[]::new);
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		}
+
+		@Override
+		public void writeChanges(String[] txrLines) {
+			throw new UnsupportedOperationException();
+		}
+	}
 
 	private Text txtInput;
 	private TreeViewer treeViewer;
@@ -86,7 +119,8 @@ public class TestCasesPart {
 				if (s instanceof TestCase) {
 					TestCase testCase = (TestCase)s;
 					try {
-						debugPart.setTxrAndData(testCase.getTxrTestCase().getTxrResource().toURI().toURL(), testCase.getInputData());
+						ITxrSource txrSource = new TxrSourceForTestCase(testCase.getTxrTestCase().getTxrResource());
+						debugPart.setTxrAndData(txrSource, testCase.getInputData());
 					} catch (IOException e1) {
 						// TODO Auto-generated catch block
 						e1.printStackTrace();

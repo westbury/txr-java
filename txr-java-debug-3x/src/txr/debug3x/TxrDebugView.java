@@ -18,6 +18,7 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 
+import txr.debug.ITxrSource;
 import txr.debug.TxrDebugPart;
 
 
@@ -131,8 +132,8 @@ public class TxrDebugView extends ViewPart {
 	}
 
 	// This is used for programmatic opening of view
-	public void setTxrAndData(URL resource, String[] lines) {
-		pojoView.setTxrAndData(resource, lines);
+	public void setTxrAndData(ITxrSource txrSource, String[] lines) {
+		pojoView.setTxrAndData(txrSource, lines);
 	}
 
 }

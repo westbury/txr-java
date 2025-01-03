@@ -1,17 +1,13 @@
 package txr.debug;
 
-import java.io.BufferedReader;
-import java.io.IOException;
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.inject.Inject;
-//import javax.inject.PostConstruct;
 
+import org.eclipse.core.databinding.observable.value.AbstractObservableValue;
 import org.eclipse.core.databinding.observable.value.IObservableValue;
 import org.eclipse.core.databinding.observable.value.IValueChangeListener;
 import org.eclipse.core.databinding.observable.value.ValueChangeEvent;
@@ -23,6 +19,8 @@ import org.eclipse.swt.dnd.Clipboard;
 import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.events.ControlAdapter;
 import org.eclipse.swt.events.ControlEvent;
+import org.eclipse.swt.events.ModifyEvent;
+import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -59,18 +57,6 @@ import txr.parser.TxrErrorInDocumentException;
 public class TxrDebugPart {
 
 	public static String ID = "txr.debug.TxrDebugPart";
-
-	private String txr = "Introduction\n"
-			+ "\n"
-			+ "@(collect)\n"
-			+ "Title: @description\n"
-			+ "Amount: �@amount\n"
-			+ "\n"
-			+ "@(until)\n"
-			+ "Conclusion\n"
-			+ "@(end)\n"
-			+ "Conclusion\n"
-			+ "Total: �@delivery\n";
 	
 	String [] testData = new String [] {
 			"Introduction",
@@ -109,6 +95,24 @@ public class TxrDebugPart {
 	 * (This suggests we need a separate class to create the controls?)
 	 */
 	private int currentDataLineIndex;
+
+	private ITxrSource txrSource;
+
+	private Button saveButton;
+
+	private String[] txrLines =  new String [] {
+			"Introduction",
+			"",
+			"@(collect)",
+			"Title: @description",
+			"Amount: �@amount",
+			"",
+			"@(until)",
+			"Conclusion",
+			"@(end)",
+			"Conclusion",
+			"Total: �@delivery"
+	};
 
 	@Inject
 	public TxrDebugPart(Composite parent) {
@@ -197,7 +201,7 @@ public class TxrDebugPart {
 
 		Control dataComposite = createMainArea(stackComposite);
 
-		if (txr == null || testData == null) {
+		if (txrLines == null || testData == null) {
 			stackLayout.topControl = noSessionLabel;
 		} else {
 			stackLayout.topControl = dataComposite;
@@ -238,17 +242,72 @@ public class TxrDebugPart {
 			}
 
 			private void rerunChanges() {
+				// Reload the TXR from file
+				txrLines = txrSource.readLines();
+				try {
+					String txrData = String.join("\n", txrLines);
+
+	                // Rebuild the matcher so when we re-run we include the changes.
+	                // We re-build from the string, so this would update the view even if the TXR
+	                // had not been saved to file.
+	                InputStream txrInputStream = new ByteArrayInputStream(txrData.getBytes());
+	    			matcher = new DocumentMatcher(txrInputStream, "UTF-8");
+ 				} catch (TxrErrorInDocumentException e) {
+					// TODO We need to handle this with user feedback.
+					// This error would be caused by bad TXR as the input.
+					throw new RuntimeException(e);
+				}		
+							
 				runMatcher(null);
 				txrEditorComposite.requestLayout();
 				testDataComposite.requestLayout();
 			}
 		});
 
+		// The lines of TXR in the left view are editable text boxes.
+		// This button will save the changes back to the original resource file.
+		// We don't make it visible until an editable resource is set.
+		saveButton = new Button(composite, SWT.PUSH);
+		saveButton.setText("Save TXR Changes");
+		saveButton.addSelectionListener(new SelectionListener() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				saveChanges();
+			}
+
+			@Override
+			public void widgetDefaultSelected(SelectionEvent e) {
+				saveChanges();
+			}
+
+			private void saveChanges() {
+				txrSource.writeChanges(txrLines);
+		        				
+				String txrData = String.join("\n", txrLines);	
+		        try {
+	                // Rebuild the matcher so when we re-run we include the changes.
+	                // We re-build from the string, so this would update the view even if the TXR
+	                // had not been saved to file.
+	                InputStream txrInputStream = new ByteArrayInputStream(txrData.getBytes());
+	    			matcher = new DocumentMatcher(txrInputStream, "UTF-8");
+				} catch (TxrErrorInDocumentException e) {
+					// TODO We need to handle this with user feedback.
+					// This error would be caused by bad TXR as the input.
+					e.printStackTrace();
+				}
+				
+                saveButton.setEnabled(false);
+			}
+		});
+		saveButton.setVisible(false);
+		
 		return composite;
 	}
 
 	public void pasteTxr() {
-		txr = getTextFromClipboard();
+		String txr = getTextFromClipboard();
+		txrLines = txr.split("\n");
+
 		this.parseTxr();
 		this.runMatcher(null);
 
@@ -299,12 +358,12 @@ public class TxrDebugPart {
 
 	}
 
-	private Control txrLineRowComposite(Composite parent, int lineNumber, int dataLineNumber, String line, int indentation, TxrAction[] actions, Listener listener) {
-		return txrLineRowComposite(parent, lineNumber, dataLineNumber, line, indentation, actions, listener, Display.getDefault().getSystemColor(SWT.COLOR_BLACK));
+	private Control txrLineRowComposite(Composite parent, int lineNumber, int dataLineNumber, IObservableValue<String> txrLine, int indentation, TxrAction[] actions, Listener listener) {
+		return txrLineRowComposite(parent, lineNumber, dataLineNumber, txrLine, indentation, actions, listener, Display.getDefault().getSystemColor(SWT.COLOR_BLACK));
 	}
 	
 	// Data line number is needed here only for the context menu. Perhaps passing in actions bound to the data line number would be better.
-	private Control txrLineRowComposite(Composite parent, int lineNumber, int dataLineNumber, String line, int indentation, TxrAction[] actions, Listener listener, Color color) {
+	private Control txrLineRowComposite(Composite parent, int lineNumber, int dataLineNumber, IObservableValue<String> txrLine, int indentation, TxrAction[] actions, Listener listener, Color color) {
 		Composite composite = new Composite(parent, SWT.NONE);
 		GridLayout layout = new GridLayout(2, false);
 		layout.marginHeight = 0;
@@ -318,12 +377,19 @@ public class TxrDebugPart {
 		lineNumberControl.setLayoutData(lineNumberGridData);
 
 		Text lineControl = new Text(composite, SWT.NONE);
-		lineControl.setText(line);
+		lineControl.setText(txrLine.getValue());
 		lineControl.setForeground(color);
 		GridData textGridData = new GridData(SWT.FILL, SWT.BOTTOM, true, true);
 		textGridData.horizontalIndent = indentation * 30;
 		lineControl.setLayoutData(textGridData);
 
+		lineControl.addModifyListener(new ModifyListener() {
+			@Override
+			public void modifyText(ModifyEvent e) {
+				txrLine.setValue(lineControl.getText());
+			}
+		});
+		
 		createContextMenuForTxrLine(lineControl, lineNumber, dataLineNumber, actions);
 		
 		Control[] x = { composite, lineNumberControl, lineControl };
@@ -461,26 +527,17 @@ public class TxrDebugPart {
 		}
 	}
 
-	private DocumentMatcher createMatcherFromResource(String resourceName) {
-		ClassLoader classLoader = getClass().getClassLoader();
-		URL resource = classLoader.getResource(resourceName);
-		try (InputStream txrInputStream = resource.openStream()) {
-			return new DocumentMatcher(txrInputStream, "UTF-8");
-		} catch (IOException e) {
-			e.printStackTrace();
-			throw new RuntimeException(e);
-		} catch (TxrErrorInDocumentException e) {
-			e.printStackTrace();
-			throw new RuntimeException(e);
-		}
-	}
+	private DocumentMatcher createMatcherFromTxrLines() {
+		try {
+			String txrData = String.join("\n", txrLines);
 
-	private DocumentMatcher createMatcherFromResource(URL resource) {
-		try (InputStream txrInputStream = resource.openStream()) {
-			return new DocumentMatcher(txrInputStream, "UTF-8");
-		} catch (IOException e) {
-			e.printStackTrace();
-			throw new RuntimeException(e);
+			// Rebuild the matcher so when we re-run we include the changes.
+			// We re-build from the string, so this would update the view even if the TXR
+			// had not been saved to file.
+			InputStream txrInputStream2 = new ByteArrayInputStream(txrData.getBytes());
+			// TODO we're setting this twice?
+			matcher = new DocumentMatcher(txrInputStream2, "UTF-8");
+			return matcher;
 		} catch (TxrErrorInDocumentException e) {
 			e.printStackTrace();
 			throw new RuntimeException(e);
@@ -504,7 +561,6 @@ public class TxrDebugPart {
 		currentDataLineIndex = -1;
 		
 		txrLineMatches = new ArrayList<>();
-		String[] txrLines = txr.split("\n");
 
 		final int fudgeFactor = 3;
 
@@ -521,6 +577,24 @@ public class TxrDebugPart {
 				System.out.println("     " + txrLines[txrLineIndex]);
 				System.out.println("     " + testData[textDataLineIndex]);
 
+				IObservableValue<String> txrLine = new AbstractObservableValue<String>() {
+					@Override
+					public Object getValueType() {
+						return String.class;
+					}
+
+					@Override
+					protected String doGetValue() {
+						return txrLines[txrLineIndex];
+					}
+					
+					@Override
+					public void doSetValue(String value) {
+						txrLines[txrLineIndex] = value;
+						saveButton.setEnabled(true);
+					}
+				};
+				
 				TxrLineMatch txrLineMatch = new TxrLineMatch(txrLineIndex + 1, txrLines[txrLineIndex]);
 				txrLineMatches.add(txrLineMatch);
 
@@ -582,7 +656,7 @@ public class TxrDebugPart {
 					}
 				};
 
-				Control lineControl = txrLineRowComposite(txrEditorComposite, txrLineIndex + 1, currentDataLineIndex + 1, txrLines[txrLineIndex], indentation, new TxrAction[0], listener);
+				Control lineControl = txrLineRowComposite(txrEditorComposite, txrLineIndex + 1, currentDataLineIndex + 1, txrLine, indentation, new TxrAction[0], listener);
 				int rowHeight = lineControl.computeSize(SWT.DEFAULT, SWT.DEFAULT).y;
 				lineControl.setLayoutData(new RowData(SWT.DEFAULT, rowHeight));
 				
@@ -631,6 +705,25 @@ public class TxrDebugPart {
 			public void createDirective2(int txrLineIndex, int textDataLineIndex, int indentation, TxrAction[] actions, Color color) {
 				System.out.println("create directive: " + txrLineIndex + ", " + textDataLineIndex);
 				System.out.println("     " + txrLines[txrLineIndex]);
+				
+				IObservableValue<String> txrLine = new AbstractObservableValue<String>() {
+					@Override
+					public Object getValueType() {
+						return String.class;
+					}
+
+					@Override
+					protected String doGetValue() {
+						return txrLines[txrLineIndex];
+					}
+					
+					@Override
+					public void doSetValue(String value) {
+						txrLines[txrLineIndex] = value;
+						saveButton.setEnabled(true);
+					}
+				};
+								
 				if (textDataLineIndex == testData.length) {
 					TxrLineMatch txrLineMatch = new TxrLineMatch(txrLineIndex + 1, txrLines[txrLineIndex]);
 					txrLineMatches.add(txrLineMatch);
@@ -653,7 +746,7 @@ public class TxrDebugPart {
 						}
 					};
 					
-					Control lineControl = txrLineRowComposite(txrEditorComposite, txrLineIndex + 1, currentDataLineIndex + 1, txrLines[txrLineIndex], indentation, actions, listener, color);
+					Control lineControl = txrLineRowComposite(txrEditorComposite, txrLineIndex + 1, currentDataLineIndex + 1, txrLine, indentation, actions, listener, color);
 					int rowHeight = lineControl.computeSize(SWT.DEFAULT, SWT.DEFAULT).y;
 					lineControl.setLayoutData(new RowData(SWT.DEFAULT, rowHeight));
 					
@@ -702,7 +795,7 @@ public class TxrDebugPart {
 					}
 				};
 				
-				Control lineControl = txrLineRowComposite(txrEditorComposite, txrLineIndex + 1, currentDataLineIndex + 1, txrLines[txrLineIndex], indentation, actions, listener, color);
+				Control lineControl = txrLineRowComposite(txrEditorComposite, txrLineIndex + 1, currentDataLineIndex + 1, txrLine, indentation, actions, listener, color);
 				int rowHeight = lineControl.computeSize(SWT.DEFAULT, SWT.DEFAULT).y;
 				lineControl.setLayoutData(new RowData(SWT.DEFAULT, rowHeight));
 				
@@ -718,6 +811,25 @@ public class TxrDebugPart {
 			public void createMismatch(int txrLineIndex, int textDataLineIndex, int indentation, String message) {
 				System.out.println("create mismatch: " + txrLineIndex + ", " + textDataLineIndex);
 				System.out.println("     " + txrLines[txrLineIndex]);
+				
+				IObservableValue<String> txrLine = new AbstractObservableValue<String>() {
+					@Override
+					public Object getValueType() {
+						return String.class;
+					}
+
+					@Override
+					protected String doGetValue() {
+						return txrLines[txrLineIndex];
+					}
+					
+					@Override
+					public void doSetValue(String value) {
+						txrLines[txrLineIndex] = value;
+						saveButton.setEnabled(true);
+					}
+				};
+				
 				if (textDataLineIndex == testData.length) {
 					TxrLineMatch txrLineMatch = new TxrLineMatch(txrLineIndex + 1, txrLines[txrLineIndex]);
 					txrLineMatches.add(txrLineMatch);
@@ -730,7 +842,7 @@ public class TxrDebugPart {
 						}
 					};
 					
-					Control lineControl = txrLineRowComposite(txrEditorComposite, txrLineIndex + 1, currentDataLineIndex + 1, txrLines[txrLineIndex], indentation, new TxrAction[0], listener, Display.getDefault().getSystemColor(SWT.COLOR_DARK_MAGENTA));
+					Control lineControl = txrLineRowComposite(txrEditorComposite, txrLineIndex + 1, currentDataLineIndex + 1, txrLine, indentation, new TxrAction[0], listener, Display.getDefault().getSystemColor(SWT.COLOR_DARK_MAGENTA));
 					int rowHeight = lineControl.computeSize(SWT.DEFAULT, SWT.DEFAULT).y;
 					lineControl.setLayoutData(new RowData(SWT.DEFAULT, rowHeight));
 					
@@ -807,7 +919,7 @@ public class TxrDebugPart {
 					}
 				};
 
-				Control lineControl = txrLineRowComposite(txrEditorComposite, txrLineIndex + 1, currentDataLineIndex + 1, txrLines[txrLineIndex], indentation, new TxrAction[0], listener, Display.getDefault().getSystemColor(SWT.COLOR_DARK_YELLOW));
+				Control lineControl = txrLineRowComposite(txrEditorComposite, txrLineIndex + 1, currentDataLineIndex + 1, txrLine, indentation, new TxrAction[0], listener, Display.getDefault().getSystemColor(SWT.COLOR_DARK_YELLOW));
 				int rowHeight = lineControl.computeSize(SWT.DEFAULT, SWT.DEFAULT).y;
 				lineControl.setLayoutData(new RowData(SWT.DEFAULT, rowHeight));
 				
@@ -1043,42 +1155,41 @@ public class TxrDebugPart {
 	}
 
 	// This is used for programmatic opening of view
-	public void setTxrAndData(URL resource, String[] lines) {
-		try (InputStream txrInputStream = resource.openStream()) {
-			this.testData = lines;
-			
-			this.txr = new BufferedReader(new InputStreamReader(txrInputStream, "UTF-8"))
-					   .lines().collect(Collectors.joining("\n"));
-			
-			matcher = this.createMatcherFromResource(resource);
-			
-			// TODO dedup all the following
-			this.runMatcher(null);
+	public void setTxrAndData(ITxrSource txrSource, String[] lines) {
+		this.txrSource = txrSource;
+		this.testData = lines;
 
-			txrEditorComposite.layout();
-			testDataComposite.layout();
-
-			// Is this needed?  (if not, hsc)
-			//		sc.setMinSize(horizontallySplitComposite.computeSize(SWT.DEFAULT, SWT.DEFAULT));
-			horizontallySplitComposite.setSize(horizontallySplitComposite.computeSize(SWT.DEFAULT, SWT.DEFAULT));
-			horizontallySplitComposite.layout();
-
-			// Must do this first, before sc, because it decides if there is a horizontal scrollbar which
-			// in turn affects the height for the vertical scroll bar.
-			sc1.layout(true);
-			sc1.update();
-			sc1.getParent().update();
-			sc1.getParent().layout(true);
-
-			sc.layout(true);
-			sc.update();
-			sc.getParent().update();
-			sc.getParent().layout(true);
-
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		if (txrSource.isEditable()) {
+			saveButton.setVisible(true);
+			saveButton.setEnabled(false);
+		} else {
+			saveButton.setVisible(false);
 		}
 		
+		txrLines = txrSource.readLines();
+		matcher = this.createMatcherFromTxrLines();
+		
+		// TODO dedup all the following
+		this.runMatcher(null);
+
+		txrEditorComposite.layout();
+		testDataComposite.layout();
+
+		// Is this needed?  (if not, hsc)
+		//		sc.setMinSize(horizontallySplitComposite.computeSize(SWT.DEFAULT, SWT.DEFAULT));
+		horizontallySplitComposite.setSize(horizontallySplitComposite.computeSize(SWT.DEFAULT, SWT.DEFAULT));
+		horizontallySplitComposite.layout();
+
+		// Must do this first, before sc, because it decides if there is a horizontal scrollbar which
+		// in turn affects the height for the vertical scroll bar.
+		sc1.layout(true);
+		sc1.update();
+		sc1.getParent().update();
+		sc1.getParent().layout(true);
+
+		sc.layout(true);
+		sc.update();
+		sc.getParent().update();
+		sc.getParent().layout(true);
 	}
 }
