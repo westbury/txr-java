@@ -263,6 +263,28 @@ public class DocumentMatcherTest {
 		assertNotNull(matched);
 	}
 
+	/**
+	 * If a dash is the first or last character in a list of alternative characters then
+	 * it does not indicate a range and simply matches to a dash.
+	 * 
+	 * @throws TxrErrorInDocumentException
+	 */
+	@Test
+	public void DashAtEndTest() throws TxrErrorInDocumentException {
+		// TODO fix this test. This is a marker test for code that has not
+		// been implemented.
+		Parser p = new Parser();
+		AST ast = p.parse("@{amount /[\\d-]+/}");
+
+		DocumentMatcher m = new DocumentMatcher(ast);
+
+		String [] inputText = new String [] {
+				"23-4"
+		};
+		MatchResults matched = m.process(inputText);
+		assertNotNull(matched);
+	}
+
 	@Test
 	public void Section_6_13_WhitespaceTest1() throws TxrErrorInDocumentException {
 		Parser p = new Parser();
@@ -346,6 +368,38 @@ public class DocumentMatcherTest {
 		};
 		MatchResults matched = m.process(inputText);
 		assertNotNull(matched);
+	}
+
+	/**
+	 * Test that shows how match against a line that may contain double spaces
+	 * but remove the extraneous spaces before binding.
+	 *
+	 * @throws TxrErrorInDocumentException 
+	 */
+	@Test
+	public void ExtraneousSpaceRemovalTest() throws TxrErrorInDocumentException {
+		Parser p = new Parser();
+		AST ast = p.parse(
+				"@{text}\n"
+				+ "@(bind clean_text @(regsub #/ +/ \" \" text))\n"
+				+ "@{clean_text}\n"
+				);
+
+		DocumentMatcher m = new DocumentMatcher(ast);
+
+		String [] inputText1 = new String [] {
+				"TXR is    a   great language",
+				"TXR is a great language"
+		};
+		MatchResults matched1 = m.process(inputText1);
+		assertNotNull(matched1);
+
+		String [] inputText2 = new String [] {
+				"TXR is    a   great language",
+				"TXR is    a   great language"
+		};
+		MatchResults matched2 = m.process(inputText2);
+		assertNull(matched2);
 	}
 
 }

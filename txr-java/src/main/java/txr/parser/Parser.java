@@ -195,6 +195,7 @@ public class Parser {
 
 			switch (c) {
 			case '#':
+			{
 				char c2 = query.charAt(i+1);
 				switch (c2) {
 				case '/':
@@ -230,6 +231,7 @@ public class Parser {
 					throw new TxrErrorOnLineException(i, "Invalid subexpression. The character '" + c2 + " is not a valid character to follow #.");
 				}
 				break;
+			}
 
 			case ':':
 				// A keyword symbol
@@ -253,12 +255,29 @@ public class Parser {
 				break;
 
 			case '(':
+			{
 				// A nested expr
 				i += 1;
 				List<SubExpression> subExpressions = parseExpression();
 				subExpression = new NestedExpr(subExpressions);
 				break;
+			}
 
+			case '@':
+			{
+				char c2 = query.charAt(i+1);
+				switch (c2) {
+				case '(':
+					i += 2;
+					List<SubExpression> subExpressions = parseExpression();
+					subExpression = new FunctionExpr(subExpressions);
+					break;				
+				default:
+					throw new TxrErrorOnLineException(i, "Invalid subexpression. The character '" + c2 + " is not a valid character to follow @ (expected '(').");
+				}
+				break;
+			}
+			
 			case ';':
 				// A comment.  Ignore the rest of the line
 				eatRestOfLine();
